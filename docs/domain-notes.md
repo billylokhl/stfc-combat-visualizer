@@ -6,154 +6,240 @@
 
 ---
 
-## Confirmed Discoveries
+## Confirmed Facts
 
-### 1. Weapons Have Warmup
+### 1. Weapons Have Warmup/Cooldown/Shots in Source Data
 **Evidence**: Direct observation from stfc.space weapon data  
-**Confidence**: 100%
+**Verification Method**: Manual inspection of multiple ships on stfc.space  
+**Status**: ✅ Confirmed
 
-Every weapon has a warmup value (in seconds) representing the delay from combat round start until the weapon becomes ready to fire.
+Every weapon in STFC has three timing values:
+- **Warmup** (seconds): Delay before first fire
+- **Cooldown** (seconds): Delay between fires
+- **Shots** (count): Number of projectiles per activation
 
-Example:
-- Augur's Obliterator Torpedo has 2-second warmup
-- This means it cannot fire until round 3 (if rounds are 1-second duration)
+Example from stfc.space:
+- Augur's Obliterator Torpedo: warmup=2s, cooldown=3s, shots=1
+- Augur's Beam Array: warmup=0s, cooldown=1s, shots=2
 
-**Implication**: Warmup is fundamental to weapon timing, not a derived value.
+**Implication**: These values exist in STFC game data and can be used as source material.
 
-### 2. Weapons Have Cooldown
-**Evidence**: Direct observation from stfc.space weapon data  
-**Confidence**: 100%
+### 2. Hardpoint Positions Not in Source Data
+**Evidence**: stfc.space does not specify hardpoint positions (left/right/center)  
+**Verification Method**: Manual inspection of weapon data fields  
+**Status**: ✅ Confirmed
 
-Every weapon has a cooldown value (in seconds) representing the delay after firing before the weapon can fire again.
-
-Example:
-- Augur's Obliterator Torpedo has 3-second cooldown
-- After firing in round 3, it cannot fire again until round 6
-
-**Implication**: Cooldown determines weapon firing frequency.
-
-### 3. Weapons Have Shot Count
-**Evidence**: Direct observation from stfc.space weapon data  
-**Confidence**: 100%
-
-Many weapons fire multiple shots during a single activation (one "burst").
-
-Example:
-- Augur's Beam Array has 2 shots
-- When the weapon activates, it fires 2 shots in rapid succession
-- The cooldown begins after both shots complete
-
-**Implication**: Shot count represents consecutive shots during one weapon activation cycle, not separate activations.
-
-### 4. Shot Count Represents Burst Fire
-**Evidence**: Visual animation patterns in STFC  
-**Confidence**: 95%
-
-Multiple shots from a single weapon occur rapidly with small delays between them (typically 50-100ms in visualization), not as separate cooldown cycles.
-
-**Implication**: A weapon with 2 shots and 3-second cooldown fires "shot1, delay, shot2, then cooldown", not "shot1, cooldown, shot2, cooldown".
-
-### 5. Left/Right/Center Are Visualization Concepts
-**Evidence**: stfc.space does not specify hardpoint positions  
-**Confidence**: 100%
-
-Weapon data in STFC does not include:
+Weapon data does NOT include:
 - hardpoint position (left/right/center)
 - visual mounting point
 - animation type
 
-These are visualization layer concerns, not combat data.
+**Implication**: Hardpoint positions are visualization decisions, not combat data. Same weapon can render differently on different ships.
 
-**Implication**: 
-- `ship-model` should not define hardpoint positions
-- `visualization-model` should map weapons to hardpoints
-- Same weapon could render differently on different ships
-
-### 6. Ship Visualizer Is Not a Combat Simulator
+### 3. Project Scope: Visualization, Not Simulation
 **Evidence**: Project vision and milestone goals  
-**Confidence**: 100%
+**Verification Method**: Repository documentation  
+**Status**: ✅ Confirmed
 
-This project visualizes weapon firing patterns, not combat outcomes.
-
-We do NOT simulate:
+This project visualizes weapon firing patterns. We do NOT simulate:
 - damage calculation
 - shield mechanics
 - target selection
 - combat resolution
-- defeat conditions
+- health/defeat
 
-**Implication**: Combat model should generate events (weapon fired), not simulate damage/shields/health.
+**Implication**: Combat model generates events (weapon fired), not outcomes (damage dealt).
 
-### 7. Firing Order May Be Derived from Weapon Array Position
-**Evidence**: Weapon listing order on stfc.space appears consistent with firing order  
-**Confidence**: 70% (needs verification)
+---
 
-When weapons have the same warmup, they appear to fire in the order they are listed in the ship's weapon array.
+## Strong Evidence (High Confidence Hypotheses)
 
-**Implication**: If confirmed, weapon order in `Ship.weapons[]` array determines firing priority.
+### 1. Warmup/Cooldown/Shots Determine Firing Pattern
+**Evidence**: 5 analyzed ships (Augur, Vengeance, Kelvin, Borg Cube, Rotarran) all derivable  
+**Confidence**: 90%  
+**Verification Method**: Firing pattern analysis in firing-pattern-analysis.md  
+**Status**: 🔬 Hypothesis (needs battle-log validation)
+
+**Claim**: Weapon firing patterns can be mechanically derived from warmup/cooldown/shots values without manual schedule authoring.
+
+**Evidence**:
+- 5/5 ships analyzed had derivable patterns
+- No irregular timing discovered
+- All patterns match expected warmup+cooldown behavior
+
+**If False**: Some ships have irregular schedules requiring manual FiringSchedule specification.
+
+**Validation Needed**: Compare derived patterns to actual battle logs.
+
+### 2. Shot Count Represents Burst Fire
+**Evidence**: Typical STFC weapon behavior shows rapid consecutive shots  
+**Confidence**: 85%  
+**Verification Method**: Observation of STFC combat animations  
+**Status**: 🔬 Hypothesis (needs timing measurement)
+
+**Claim**: A weapon with shots=2 fires both shots rapidly during one activation, then cooldown begins.
+
+**Alternative Hypothesis**: Each shot triggers a separate cooldown cycle.
+
+**Evidence**:
+- Visual animations show rapid bursts
+- Logical interpretation of "shots per activation"
+
+**If False**: Event generation timing model needs revision.
+
+**Validation Needed**: Measure inter-shot delays in actual combat.
 
 ---
 
 ## Likely True
 
 ### 1. Weapon Listing Order Represents Firing Order
+---
+
+## Unverified Hypotheses (Medium Confidence)
+
+### 1. Weapon Listing Order Determines Firing Order
+**Evidence**: stfc.space weapon order appears consistent with observed firing  
 **Confidence**: 70%  
-**Evidence**: 
+**Verification Method**: Visual observation, no battle-log data  
+**Status**: 🔬 Hypothesis (needs controlled testing)
+
+**Claim**: When multiple weapons have the same warmup, they fire in the order listed in the weapon array.
+
+**Evidence**:
 - stfc.space lists weapons in consistent order
-- Observed firing patterns match listing order when warmups are equal
-- No counter-examples found yet
+- No counter-examples found in 5 analyzed ships
+- Appears logical for implementation
+**Evidence**: STFC community knowledge, initiative mechanics  
+**Confidence**: 60%  
+**Verification Method**: Community discussion, no official documentation  
+**Status**: 🔬 Hypothesis (needs PvP battle-log analysis)
 
-**If False**:
-- `combat-model` would need explicit weapon priority values
-- Ship definitions would need `firingPriority` field
-- Impact: Minor (single field addition)
+**Claim**: In PvP combat, the attacking ship enters firing sequence before the defending ship.
 
-**Affected Packages**:
-- `ship-model`: Would add `firingPriority?: number` to WeaponDefinition
-- `combat-model`: Would sort by priority instead of array position
-
-### 2. Attacker Fires Before Defender in PvP
-**Confidence**: 85%  
-**Evidence**: 
+**Evidence**:
 - Common STFC community understanding
 - Initiative mechanics typically favor attacker
 - Aligns with "alpha strike" meta
 
 **If False**:
-- Would need ship role tracking (attacker/defender)
-- Would affect multi-ship combat visualization
+- Would need combat context (attacker/defender roles)
+- Would affect multi-ship visualization
 - Impact: Medium (requires role concept)
 
-**Affected Packages**:
-- `combat-model`: Would need combat context (attacker/defender roles)
-- `visualization-model`: No change (receives events regardless)
-- `ship-animator`: Would need multi-ship support anyway
+**Affected Packages**: combat-model (would need role tracking)
 
-### 3. Warmup/Cooldown/Shots Are More Fundamental Than FiringSchedule
-**Confidence**: 90%  
+**Validation Needed**: PvP battle logs showing firing sequence
+
+### 3. Round Duration Is Constant at 1 Second
+**Evidence**: Warmup/cooldown values appear to align with 1-second rounds  
+**Confidence**: 50%  
+**Verification Method**: Assumption based on value alignment  
+**Status**: ❓ Unknown (needs timing measurement)
+
+**Claim**: STFC combat rounds are exactly 1 second in duration.
+
 **Evidence**:
-- All STFC weapons have warmup/cooldown/shots in source data
-- FiringSchedule was designed before discovering stfc.space data structure
-- Current FiringSchedule types (EveryRound, Interval, SpecificRounds) appear to be derived patterns
-
-**If False**:
-- Some ships have truly irregular firing patterns not derivable from warmup/cooldown
-- Would require manual FiringSchedule authoring
-- Impact: High (current model is correct, no migration needed)
-
-**Affected Packages**:
-- `ship-model`: WeaponDefinition structure would change
-- `combat-model`: Event generation logic would change from FiringSchedule interpretation to warmup/cooldown calculation
-- `visualization-model`: No change (receives combat events)
-
-### 4. Rounds Are 1-Second Duration
-**Confidence**: 60%  
-**Evidence**:
-- Warmup/cooldown values align with round counts when assuming 1-second rounds
+- Warmup/cooldown values (integers) align with round counts
 - No official documentation found
-- Could be different in different game modes
 
 **If False**:
+- Would need round duration configuration
+- Would affect time calculations
+- Impact: Low (configuration parameter)
+
+**Affected Packages**: combat-model
+
+**Validation Needed**: Video analysis of combat timing, frame counting
+
+---
+
+## Unknowns (Low Confidence / No Evidence)
+
+### 1. Special Abilities and Weapon Modifiers
+**Status**: ❓ Unknown
+
+No research yet on:
+- Officer abilities that modify weapon timing
+- Ship abilities that affect firing patterns
+- Critical hits and special effects
+- Morale/crew effects on combat
+
+**Impact**: May affect event generation if abilities modify warmup/cooldown dynamically.
+
+### 2. Multi-Ship Combat Sequencing
+**Status**: ❓ Unknown
+Future Validation Targets
+
+### High Priority (Affects Current Architecture)
+
+**1. Weapon Firing Order**
+- **Question**: Does weapon array position always determine firing order?
+- **Method**: Analyze ships with 4+ weapons with identical warmup values
+- **Ships to Test**: Borg Cube (6 weapons), Enterprise, Voyager
+- **Success Criteria**: 10+ ships with no counter-examples
+
+**2. Warmup/Cooldown Derivability**
+- **Question**: Are all firing patterns derivable from warmup/cooldown/shots?
+- **Method**: Search for irregular schedules in ship database
+- **Ships to Test**: Special event ships, faction-specific ships, legendary ships
+- **Success Criteria**: 20+ ships analyzed, no irregular patterns found
+
+**3. Round Duration**
+- **Question**: Is round duration exactly 1 second?
+- **Method**: Video analysis of combat with frame counting
+- **Ships to Test**: Any ship, multiple game modes
+- **Success Criteria**: Measured duration ±0.1s across 10+ battles
+
+### Medium Priority (Future Features)
+
+**4. Attacker/Defender Sequencing**
+- **Question**: Does attacker always fire before defender in PvP?
+- **Method**: PvP battle log analysis
+- **Ships to Test**: Mirror matches (same ship vs. same ship)
+- **Success Criteria**: 20+ PvP battles showing consistent ordering
+
+**5. Multi-Shot Timing**
+- **Question**: What is the delay between shots in a burst?
+- **Method**: Frame-by-frame video analysis
+- **Ships to Test**: Augur (2-shot weapons), Vengeance (3-shot weapons)
+- **Success Criteria**: Measured inter-shot delay ±10ms
+
+### Low Priority (Edge Cases)
+
+**6. Unusual Firing Schedules**
+- **Question**: Are there weapons with non-standard timing?
+- **Method**: Database search for special abilities
+- **Ships to Test**: Event ships, limited-time ships, faction flagships
+- **Success Criteria**: Catalog of any irregular patterns found
+
+**7. Officer and Ability Effects**
+- **Question**: Do officer abilities modify weapon timing?
+- **Method**: Community documentation research
+- **Ships to Test**: Ships with known timing-modifying officers
+- **Success Criteria**: Document which effects matter for visualization vs. simulation
+
+---
+
+## 
+No research on:
+- 3v3 battle firing order
+- Target selection
+- Focus fire mechanics
+- Round interleaving vs. sequential
+
+**Impact**: Future milestone concern (multi-ship visualization).
+
+### 3. Game Mode Timing Variations
+**Status**: ❓ Unknown
+
+No research on whether round duration varies across:
+- PvP
+- PvE
+- Armada battles
+- Territory capture
+
+**Impact**: May require mode-specific configuration.**If False**:
 - Would need round duration configuration
 - Would affect time-to-visual transformation
 - Impact: Low (configuration parameter)
@@ -252,7 +338,7 @@ When weapons have the same warmup, they appear to fire in the order they are lis
 ### Potential Architecture Improvements
 
 #### 1. Migrate WeaponDefinition to Warmup/Cooldown/Shots
-**Rationale**: 
+**Rationale**:
 - Matches STFC source data structure
 - More maintainable (copy values from stfc.space)
 - FiringSchedule becomes derived, not authored
@@ -277,7 +363,7 @@ When weapons have the same warmup, they appear to fire in the order they are lis
 **Recommendation**: Current approach is correct, document as best practice
 
 #### 3. Add Weapon Priority Field (If Order ≠ Array Position)
-**Rationale**: 
+**Rationale**:
 - Explicit is better than implicit if firing order matters
 - Prevents bugs from accidental reordering
 

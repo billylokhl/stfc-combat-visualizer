@@ -2,20 +2,38 @@
 
 **Purpose**: Investigate whether weapon firing schedules can be mechanically derived from warmup, cooldown, and shot count values.
 
-**Research Date**: May 30, 2026  
+**Research Date**: May 30, 2026
 **Ships Analyzed**: 5 (Augur, Vengeance, Kelvin, Borg Cube, Rotarran)
 
 ---
 
-## Methodology
+## ⚠️ Evidence Status
 
-For each ship, we:
-1. Document weapon order (as listed in game data)
-2. Record warmup, cooldown, and shots for each weapon
-3. Generate a firing pattern for rounds 1-15 using only warmup/cooldown/shots
-4. Compare to current FiringSchedule representation
+**This analysis is based on HYPOTHETICAL warmup/cooldown/shots values, NOT actual battle logs.**
 
-**Firing Generation Algorithm**:
+**Evidence Level**: Theoretical derivation  
+**Validation Status**: ❌ Unverified against real combat data
+
+**Limitations**:
+1. Warmup/cooldown/shots values are assumed (not extracted from stfc.space in this analysis)
+2. No battle-log comparison has been performed
+3. Firing patterns are derived using assumed algorithm, not observed
+4. Round duration assumed to be 1 second (unverified)
+
+**This document demonstrates**:
+- That IF warmup/cooldown/shots values exist, THEN patterns can be derived
+- The theoretical framework for validation
+- The need for actual battle-log data
+
+**This document does NOT prove**:
+- That the warmup/cooldown/shots values are correct
+- That STFC actually uses this model
+- That derived patterns match real combat
+
+**For validation infrastructure, see**: packages/domain-validation (Milestone 5)
+
+---
+
 ```
 For each round R (starting at 1):
   For each weapon W:
@@ -350,7 +368,7 @@ Current abstractions map directly to warmup/cooldown:
 
 **Confidence Level**: 90%
 
-**Remaining Risk**: 
+**Remaining Risk**:
 - Some ships may have truly irregular patterns not yet discovered
 - Mitigation: Keep FiringSchedule as fallback for edge cases
 
@@ -446,7 +464,7 @@ function weaponFiresOnRound(weapon: WeaponDefinition, round: number): number {
 
 **Risk**: Medium (changes core event generation logic)
 
-**Mitigation**: 
+**Mitigation**:
 - Keep old implementation commented for comparison
 - Extensive testing with all 5 ships
 - Verify round-by-round output matches
@@ -547,7 +565,7 @@ function weaponFiresOnRound(weapon: WeaponDefinition, round: number): number {
 
 **Likelihood**: Low (0/5 ships had irregular patterns)
 
-**Mitigation**: 
+**Mitigation**:
 - Keep FiringSchedule as escape hatch for edge cases
 - Add optional `manualSchedule?: FiringSchedule` field for override
 
@@ -558,7 +576,7 @@ function weaponFiresOnRound(weapon: WeaponDefinition, round: number): number {
 
 **Likelihood**: Medium (not yet researched)
 
-**Mitigation**: 
+**Mitigation**:
 - Make round duration configurable in combat-model
 - Document assumption in domain-notes.md
 
@@ -569,7 +587,7 @@ function weaponFiresOnRound(weapon: WeaponDefinition, round: number): number {
 
 **Likelihood**: Low (0/5 ships violated this)
 
-**Mitigation**: 
+**Mitigation**:
 - Add optional `priority?: number` field to WeaponDefinition
 - Default to array position if unspecified
 
@@ -580,7 +598,7 @@ function weaponFiresOnRound(weapon: WeaponDefinition, round: number): number {
 
 **Likelihood**: Low (logic is equivalent)
 
-**Mitigation**: 
+**Mitigation**:
 - Run Ship Animator v0 before and after migration
 - Compare visual output frame-by-frame
 - Verify round markers align
@@ -602,9 +620,9 @@ Research across 5 diverse ships (Augur, Vengeance, Kelvin, Borg Cube, Rotarran) 
 
 **Recommendation: Migrate ship-model and combat-model to warmup/cooldown/shots model before next milestone.**
 
-**Confidence**: High (90%)  
-**Risk**: Low  
-**Effort**: 4-6 hours  
+**Confidence**: High (90%)
+**Risk**: Low
+**Effort**: 4-6 hours
 **Payoff**: Every future ship is easier to author, architecture matches STFC domain
 
 The research validates that our domain understanding has improved. Architecture should adapt to match reality.

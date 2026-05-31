@@ -13,7 +13,9 @@
       "@stfc-vi/visualization-model": ["packages/visualization-model/src"],
       "@stfc-vi/visualization-model/*": ["packages/visualization-model/src/*"],
       "@stfc-vi/asset-library": ["packages/asset-library/src"],
-      "@stfc-vi/asset-library/*": ["packages/asset-library/src/*"]
+      "@stfc-vi/asset-library/*": ["packages/asset-library/src/*"],
+      "@stfc-vi/domain-validation": ["packages/domain-validation/src"],
+      "@stfc-vi/domain-validation/*": ["packages/domain-validation/src/*"]
     }
   },
   "include": ["demos/**/*", "packages/**/*"],

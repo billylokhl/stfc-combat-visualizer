@@ -1,0 +1,17 @@
+{
+  "name": "@stfc-vi/domain-validation",
+  "version": "0.1.0",
+  "description": "Domain assumption validation framework for STFC combat mechanics",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "keywords": [
+    "stfc",
+    "validation",
+    "domain"
+  ],
+  "author": "",
+  "license": "ISC"
+}
