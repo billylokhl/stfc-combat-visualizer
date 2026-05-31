@@ -27,6 +27,12 @@ build/
 # TypeScript
 *.tsbuildinfo
 
+# Per-package build outputs
+**/dist/
+**/build/
+**/*.js.map
+**/*.d.ts.map
+
 # Environment
 .env
 .env.local

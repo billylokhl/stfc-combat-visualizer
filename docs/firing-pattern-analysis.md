@@ -1,4 +1,6 @@
-# Firing Pattern Analysis
+# Firing Pattern Analysis  (REFERENCE)
+
+STATUS: Reference analysis used during earlier milestones. Retained as reference for derivation methods and examples.
 
 **Purpose**: Investigate whether weapon firing schedules can be mechanically derived from warmup, cooldown, and shot count values.
 
