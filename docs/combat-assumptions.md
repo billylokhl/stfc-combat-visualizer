@@ -27,9 +27,11 @@ Before modifying domain models (ship-model, combat-model, visualization-model):
 
 **Description**:
 All weapon firing patterns in STFC can be mechanically derived from three values:
-- Warmup (seconds before first fire)
-- Cooldown (seconds between fires)
+- Warmup (round number when weapon first fires)
+- Cooldown (rounds between subsequent fires)
 - Shots (projectiles per activation)
+
+**Warmup Semantics**: warmup=N means first activation in round N (not N rounds of delay).
 
 No manual schedule authoring is required.
 

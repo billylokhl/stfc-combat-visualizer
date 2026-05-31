@@ -14,13 +14,18 @@
 **Status**: ✅ Confirmed and Implemented (Milestone 6)
 
 Every weapon in STFC has three timing values:
-- **Warmup** (rounds): Delay before first fire
-- **Cooldown** (rounds): Delay between fires
+- **Warmup** (round number): Round when weapon first activates
+- **Cooldown** (rounds): Rounds between subsequent activations
 - **Shots** (count): Number of projectiles per activation
 
-Example from stfc.space (converted to rounds):
-- Augur's Obliterator Torpedo: warmup=1, cooldown=3, shots=1
-- Augur's Beam Array: warmup=0, cooldown=1, shots=2
+**Warmup Semantics**:
+- warmup=1 → first activation in round 1
+- warmup=2 → first activation in round 2
+- warmup=3 → first activation in round 3
+
+**Example from Augur**:
+- Beam Array: warmup=1, cooldown=1, shots=2 → fires every round starting round 1
+- Obliterator Torpedo: warmup=2, cooldown=3, shots=1 → fires rounds 2,5,8,11,14...
 
 **Implementation**:
 - WeaponDefinition now uses warmup/cooldown/shots fields (packages/ship-model)
@@ -82,23 +87,47 @@ weaponFires = (round === firstRound) || ((round - firstRound) % cooldown === 0)
 
 **Validation Remaining**: Compare derived patterns to actual battle logs.
 
-### 2. Shot Count Represents Burst Fire
-**Evidence**: Typical STFC weapon behavior shows rapid consecutive shots
-**Confidence**: 85%
-**Verification Method**: Observation of STFC combat animations
-**Status**: 🔬 Hypothesis (needs timing measurement)
+### 2. Weapon Lifecycle: Charging and Firing States
+**Evidence**: STFC combat mechanics observation
+**Confidence**: 90%
+**Verification Method**: Game behavior analysis
+**Status**: ✅ Accepted for visualization
 
-**Claim**: A weapon with shots=2 fires both shots rapidly during one activation, then cooldown begins.
+**Claim**: Weapons alternate between two states during combat:
+- **Charging**: Weapon is preparing to fire (during warmup and cooldown periods)
+- **Firing**: Weapon activates and fires shots
 
-**Alternative Hypothesis**: Each shot triggers a separate cooldown cycle.
+**There is no Idle state.** A weapon is always either charging or firing.
 
 **Evidence**:
-- Visual animations show rapid bursts
+- Weapons have warmup (initial charging) before first fire
+- Weapons have cooldown (recharging) between fires
+- Visual animations show charging/firing cycles
+
+**Implication**: Visualization should represent charging state (future enhancement).
+
+### 3. Activation vs Shot Distinction
+**Evidence**: STFC weapon behavior and source data structure
+**Confidence**: 95%
+**Verification Method**: Observation and logical interpretation
+**Status**: ✅ Accepted
+
+**Claim**: Activation and Shot are distinct concepts:
+- **Activation**: Weapon becomes active in a round (one event)
+- **Shot**: Individual projectile within an activation (multiple possible)
+
+**Example**: A weapon with shots=4 has **one activation** that produces **four shots**.
+
+**Evidence**:
+- Source data separates `shots` as a distinct parameter
+- Visual animations show rapid consecutive shots per activation
 - Logical interpretation of "shots per activation"
 
-**If False**: Event generation timing model needs revision.
+**Implementation**:
+- Combat model generates one CombatEvent per activation
+- Visualization model expands into multiple visual events per shot
 
-**Validation Needed**: Measure inter-shot delays in actual combat.
+**If False**: Event generation model would need restructuring.
 
 ---
 
@@ -121,26 +150,53 @@ weaponFires = (round === firstRound) || ((round - firstRound) % cooldown === 0)
 - stfc.space lists weapons in consistent order
 - No counter-examples found in 5 analyzed ships
 - Appears logical for implementation
-**Evidence**: STFC community knowledge, initiative mechanics
-**Confidence**: 60%
-**Verification Method**: Community discussion, no official documentation
-**Status**: 🔬 Hypothesis (needs PvP battle-log analysis)
 
-**Claim**: In PvP combat, the attacking ship enters firing sequence before the defending ship.
+**If False**: Would need explicit firingPriority field in WeaponDefinition.
+
+**Validation Needed**: Battle logs from ships with multiple same-warmup weapons.
+
+### 2. Combat Event Ordering (Interleaved Weapon Slots)
+**Evidence**: STFC community knowledge, typical turn-based combat patterns
+**Confidence**: 60%
+**Verification Method**: Community discussion, logical assumption
+**Status**: ✅ Accepted for visualization purposes
+
+**Claim**: In two-ship combat, weapons fire in interleaved slot order:
+- Attacker Weapon 1 → Defender Weapon 1
+- Attacker Weapon 2 → Defender Weapon 2
+- Attacker Weapon 3 → Defender Weapon 3
+- (Skip missing weapon slots and continue)
+
+**Example**:
+```
+Attacker has 3 weapons, Defender has 2 weapons:
+Round 1:
+  A-W1 fires
+  D-W1 fires
+  A-W2 fires
+  D-W2 fires
+  A-W3 fires
+  (Defender has no W3, skip)
+```
 
 **Evidence**:
 - Common STFC community understanding
 - Initiative mechanics typically favor attacker
-- Aligns with "alpha strike" meta
+- Aligns with typical combat game design
+- Provides fair turn-based feel
 
 **If False**:
-- Would need combat context (attacker/defender roles)
-- Would affect multi-ship visualization
-- Impact: Medium (requires role concept)
+- Might be simultaneous firing
+- Might be full-attacker-then-full-defender
+- Might be based on weapon speed stats
 
-**Affected Packages**: combat-model (would need role tracking)
+**Impact**: Medium (affects multi-ship visualization only)
 
-**Validation Needed**: PvP battle logs showing firing sequence
+**Affected Packages**: combat-model (event ordering for two ships)
+
+**Validation Needed**: PvP battle logs showing exact firing sequence
+
+**Current Status**: Accepted as working assumption for Ship Animator v1. Can be revised when battle-log data becomes available.
 
 ### 3. Round Duration Is Constant at 1 Second
 **Evidence**: Warmup/cooldown values appear to align with 1-second rounds

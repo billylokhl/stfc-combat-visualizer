@@ -1,18 +1,35 @@
 # Migration Criteria: FiringSchedule → Warmup/Cooldown/Shots
 
-**Purpose**: Define objective criteria for when to migrate from FiringSchedule to warmup/cooldown/shots model.
+**⚠️ OBSOLETE DOCUMENT ⚠️**
 
-**Last Updated**: May 30, 2026
+**Status**: Migration completed in Milestone 6 (May 30, 2026)  
+**Retained for**: Historical reference only
+
+This document tracked the decision criteria for migrating from FiringSchedule to warmup/cooldown/shots.  
+**The migration has been completed.** See [docs/domain-notes.md](domain-notes.md) for current architecture.
 
 ---
 
-## Current Status
+## Historical Context
 
-**Architecture**: `WeaponDefinition` uses `FiringSchedule` union type (EveryRound | Interval | SpecificRounds)
+**Original Purpose**: Define objective criteria for when to migrate from FiringSchedule to warmup/cooldown/shots model.
 
-**Proposal**: Migrate to `warmup/cooldown/shots` fields matching STFC source data
+**Original Status**: Migration deferred pending validation
 
-**Decision**: ⏸️ **DEFERRED** pending validation
+**Outcome**: Migration proceeded in Milestone 6 based on:
+- Sufficient evidence from 5 analyzed ships
+- Validation infrastructure in place (domain-validation package)
+- Successful Augur firing pattern preservation
+
+**Current Architecture** (as of May 31, 2026):
+- ✅ WeaponDefinition uses warmup/cooldown/shots fields
+- ✅ FiringSchedule union type removed
+- ✅ Combat events derived from warmup/cooldown algorithm
+- ✅ Domain realignment completed (warmup semantics corrected)
+
+---
+
+## Original Migration Criteria (Archived)
 
 ---
 

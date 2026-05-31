@@ -78,9 +78,13 @@ Responsibilities:
 - hardpoint assignment
 
 **Timing Model** (as of Milestone 6):
-- **warmup**: rounds before first fire
-- **cooldown**: rounds between fires
+- **warmup**: round number when weapon first activates (warmup=1 → fires in round 1)
+- **cooldown**: rounds between subsequent activations
 - **shots**: projectiles per activation
+
+**Weapon Lifecycle**: Weapons alternate between Charging (warmup/cooldown periods) and Firing (activation with shots).
+
+**Activation vs Shot**: One activation produces N shots. Activation is a round-level event; shots are individual projectiles within that activation.
 
 Firing schedules are **derived behavior** computed from warmup/cooldown, not authored data.
 
@@ -120,11 +124,13 @@ Contains:
 - Combat timeline generation
 - Combat event generation
 
-**Firing Algorithm** (as of Milestone 6):
+**Firing Algorithm** (corrected after domain realignment):
 ```
-firstRound = 1 + warmup
+firstRound = warmup || 1  // warmup is the round number, not a delay
 weaponFires = (round === firstRound) || ((round - firstRound) % cooldown === 0)
 ```
+
+**Note**: Previous implementation had a bug (`firstRound = 1 + warmup`). This has been corrected to match STFC semantics.
 
 Example:
 
