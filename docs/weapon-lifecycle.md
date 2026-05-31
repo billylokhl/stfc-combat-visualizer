@@ -102,7 +102,7 @@ function weaponFiresOnRound(weapon: WeaponDefinition, round: number): boolean {
 }
 ```
 
-**Current Implementation Note**: The code currently contains a bug (`firstRound = 1 + warmup`). This will be corrected to match the semantics above.
+**Implementation Status**: The previous off-by-one bug (`firstRound = 1 + warmup`) has been corrected. Warmup is now treated as the first activation round.
 
 ---
 
@@ -203,13 +203,13 @@ A weapon with `shots=4` fires **four consecutive shots** when activated.
 ## Visualization Implications
 
 ### Current Rendering (Ship Animator v0)
-- Charging state: No animation (weapon simply waits)
+- Charging state: Static hardpoint marker/ring
 - Firing state: Muzzle flash, recoil, projectile launch sequence
 - Multi-shot weapons: Individual shots animated with timing delays
 
 ### Future Rendering Considerations
 
-**Charging Animation** (not yet implemented):
+**Charging Animation** (future enhancement):
 - Potential visual: energy buildup, charge glow, power cycling
 - Should indicate weapon is preparing to fire
 - Should scale with remaining charge time

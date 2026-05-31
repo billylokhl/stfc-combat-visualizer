@@ -152,17 +152,17 @@ function main() {
   console.log('\n');
   console.log('If all weapons validate successfully:');
   console.log('  ✅ ASSUMPTION-001 (warmup/cooldown derivability) confirmed');
-  console.log('  ✅ Migration to warmup/cooldown/shots recommended');
-  console.log('  ✅ FiringSchedule becomes derived construct');
+  console.log('  ✅ Current warmup/cooldown/shots model gains evidence');
+  console.log('  ✅ Firing schedules remain derived behavior');
   console.log('\n');
   console.log('If any weapon fails validation:');
   console.log('  ❌ ASSUMPTION-001 partially contradicted');
-  console.log('  ⚠️  Need hybrid model (warmup/cooldown + manual FiringSchedule)');
-  console.log('  ⏸️  Defer migration until edge cases understood');
+  console.log('  ⚠️  Document edge case and consider explicit timing overrides');
+  console.log('  ⚠️  Do not add combat simulation logic without domain evidence');
   console.log('\n');
 
   console.log('See docs/combat-assumptions.md for full assumption registry.');
-  console.log('See docs/migration-criteria.md for migration decision criteria.');
+  console.log('See docs/domain-notes.md for current canonical timing model.');
   console.log('\n');
 }
 

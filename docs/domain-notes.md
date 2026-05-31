@@ -2,7 +2,7 @@
 
 **Purpose**: Capture combat domain knowledge, discoveries, assumptions, and open questions to guide architectural decisions.
 
-**Last Updated**: May 30, 2026 (Milestone 6: Migration to warmup/cooldown/shots)
+**Last Updated**: May 31, 2026 (Milestone 7: Visual Domain Alignment)
 
 ---
 
@@ -46,6 +46,11 @@ Weapon data does NOT include:
 
 **Implication**: Hardpoint positions are visualization decisions, not combat data. Same weapon can render differently on different ships.
 
+**Milestone 7 Implementation**:
+- Hardpoint positions now live in visualization-layer `ShipVisualDefinition` data
+- Hardpoints reference weapon identifiers but do not contain combat timing
+- Canvas renderer consumes hardpoint definitions instead of hardcoded Augur coordinates
+
 ### 3. Project Scope: Visualization, Not Simulation
 **Evidence**: Project vision and milestone goals
 **Verification Method**: Repository documentation
@@ -81,7 +86,7 @@ This project visualizes weapon firing patterns. We do NOT simulate:
 
 **Algorithm Implemented** (packages/combat-model/src/index.ts):
 ```typescript
-firstRound = 1 + warmup
+firstRound = warmup || 1
 weaponFires = (round === firstRound) || ((round - firstRound) % cooldown === 0)
 ```
 

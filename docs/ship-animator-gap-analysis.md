@@ -3,7 +3,7 @@
 **Purpose**: Inventory of hardcoded assumptions, architecture gaps, and technical debt in Ship Animator v0.
 
 **Last Updated**: May 31, 2026
-**Status**: Engineering Prototype (Milestone 3)
+**Status**: Engineering Prototype with Milestone 7 visual-domain alignment
 
 ---
 
@@ -81,7 +81,7 @@ const combatEvents = generateCombatEvents(augur, 1, 15);
 
 ---
 
-### 3. Hardcoded Augur Label in Renderer (Medium)
+### 3. Hardcoded Augur Label in Renderer (Resolved in Milestone 7)
 
 **Location**: `apps/ship-animator/src/renderer/CanvasRenderer.ts`
 
@@ -93,13 +93,15 @@ renderShip(): void {
 }
 ```
 
-**Issue**: Ship name is hardcoded as "AUGUR" in renderer.
+**Issue**: Ship name was hardcoded as "AUGUR" in renderer.
 
 **What should come from domain models**:
 - Ship name from ShipDefinition
 - Passed to renderer as configuration
 
-**Impact**: Displays wrong ship name when ship changes.
+**Milestone 7 Resolution**: Renderer now reads hull label/display name from `ShipVisualDefinition`.
+
+**Impact**: Resolved for renderer-level hardcoding. The application still selects Augur as the only configured ship.
 
 **Effort to Fix**: Trivial
 - Pass ship name to CanvasRenderer constructor
@@ -109,7 +111,7 @@ renderShip(): void {
 
 ---
 
-### 4. Hardcoded Hardpoint Positions (Critical)
+### 4. Hardcoded Hardpoint Positions (Resolved in Milestone 7)
 
 **Location**: `apps/ship-animator/src/renderer/CanvasRenderer.ts`
 
@@ -122,13 +124,15 @@ this.hardpoints = [
 ];
 ```
 
-**Issue**: Hardpoint positions are hardcoded for Augur's specific layout. Different ships have different weapon configurations.
+**Issue**: Hardpoint positions were hardcoded for Augur's specific layout. Different ships have different weapon configurations.
 
 **What should come from domain models**:
 - Hardpoint position mapping (from ship definition or visualization config)
 - Dynamic hardpoint layout based on ship
 
-**Impact**: Cannot render other ships correctly. Weapons would appear in wrong positions.
+**Milestone 7 Resolution**: Hardpoint locations now come from visualization-layer `ShipVisualDefinition` data.
+
+**Impact**: Renderer can consume different ship visual definitions without code changes. Additional ship visual definitions still need to be authored.
 
 **Effort to Fix**: Medium
 - Define hardpoint positions in visualization-model or ship-specific config
@@ -269,14 +273,19 @@ const visualTimelines = transformCombatToVisual(
 
 ---
 
-### ⚠️ Renderer Knows TOO MUCH (Architecture Violations)
+### Renderer Hardcoding Status
 
-**Augur-Specific Knowledge**:
-- ❌ Hardcoded "AUGUR" label (should receive ship name)
-- ❌ Hardcoded hardpoint positions (should receive configuration)
-- ❌ Hardcoded hardpoint IDs: 'left_beam', 'right_beam', 'obliterator'
+**Milestone 7 Resolved**:
+- ✅ Ship label comes from `ShipVisualDefinition.hull.label` or display name
+- ✅ Hardpoint positions come from `HardpointDefinition.location`
+- ✅ Hardpoint IDs are supplied by ship visual configuration
 
-**Impact**: Renderer is tightly coupled to Augur ship structure.
+**Remaining Application-Level Assumptions**:
+- The app still imports Augur as the selected ship
+- The app still uses Augur's visual definition as the selected visual definition
+- There is no ship catalog or selector yet
+
+**Impact**: Renderer is no longer tightly coupled to Augur ship structure, but the app is still configured to show Augur only.
 
 **Fix**: Pass ship-specific configuration to renderer:
 ```typescript

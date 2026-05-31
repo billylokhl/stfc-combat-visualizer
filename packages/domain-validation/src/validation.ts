@@ -19,7 +19,7 @@ export function deriveExpectedPattern(
   maxRounds: number = 15
 ): ExpectedFiringPattern {
   const rounds: number[] = [];
-  const firstRound = 1 + weapon.warmup;
+  const firstRound = weapon.warmup || 1;
 
   for (let round = 1; round <= maxRounds; round++) {
     if (round < firstRound) continue;

@@ -2,4 +2,8 @@
  * Example visual configurations
  */
 
-export { augurHardpoints, augurVisualConfig } from './augur-visual';
+export {
+	augurHardpoints,
+	augurVisualConfig,
+	augurVisualDefinition,
+} from './augur-visual';

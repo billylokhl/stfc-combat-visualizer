@@ -17,14 +17,14 @@ export const augurSourceData: ShipSourceData = {
     {
       weaponId: 'augur_beam_left',
       weaponName: 'Beam Array (Left)',
-      warmup: 0,
+      warmup: 1,
       cooldown: 1,
       shots: 2,
     },
     {
       weaponId: 'augur_beam_right',
       weaponName: 'Beam Array (Right)',
-      warmup: 0,
+      warmup: 1,
       cooldown: 1,
       shots: 2,
     },
@@ -98,9 +98,9 @@ export const augurObliteratorObserved: ObservedFiringPattern | null = null;
 // EXAMPLE of what this would look like with real data:
 // export const augurObliteratorObserved: ObservedFiringPattern = {
 //   weaponId: 'augur_obliterator',
-//   rounds: [3, 6, 9, 12, 15],
+//   rounds: [2, 5, 8, 11, 14],
 //   shotsPerFiring: 1,
 //   source: 'Video analysis (60fps), PvE mission "Alpha Quadrant Patrol", 2026-05-30',
 //   confidence: 'high',
-//   notes: 'Fires starting round 3, then every 3 rounds. Pattern matches warmup=2, cooldown=3.',
+//   notes: 'Fires starting round 2, then every 3 rounds. Pattern matches warmup=2, cooldown=3.',
 // };

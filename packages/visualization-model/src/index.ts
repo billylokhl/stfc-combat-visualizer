@@ -35,7 +35,7 @@ export interface VisualEvent {
   /** Weapon ID associated with this event */
   weaponId?: string;
 
-  /** Hardpoint identifier (e.g., 'left_beam', 'right_beam', 'obliterator') */
+  /** Hardpoint identifier from the ship visual definition */
   hardpoint?: string;
 
   /** Additional event-specific data */
@@ -50,6 +50,36 @@ export interface VisualEvent {
 }
 
 /**
+ * Visual state of a weapon for a given combat round.
+ *
+ * This is presentation state only. Combat timing is derived upstream by combat-model.
+ */
+export type WeaponVisualStateType = 'charging' | 'firing';
+
+/**
+ * Renderer-friendly weapon state for a round.
+ */
+export interface WeaponVisualState {
+  /** Weapon identifier from the ship model */
+  weaponId: string;
+
+  /** Hardpoint identifier from the ship visual definition */
+  hardpointId: string;
+
+  /** Current visual state */
+  state: WeaponVisualStateType;
+
+  /** Combat round (1-indexed) */
+  round: number;
+
+  /** Number of shots for this activation when firing */
+  shots?: number;
+
+  /** Optional renderer timing hint in milliseconds from round start */
+  timestamp?: number;
+}
+
+/**
  * Visual timeline for a single round
  */
 export interface VisualRoundTimeline {
@@ -59,8 +89,31 @@ export interface VisualRoundTimeline {
   /** Ordered visual events for this round */
   events: VisualEvent[];
 
+  /** Per-weapon visual state for this round */
+  weaponStates: WeaponVisualState[];
+
   /** Total duration of this round in milliseconds */
   duration: number;
+}
+
+/**
+ * Ship hull geometry used by renderers.
+ *
+ * Values are renderer units centered on the ship origin. Renderers decide how to
+ * scale those units to screen coordinates.
+ */
+export interface ShipHullGeometry {
+  /** Minimal supported hull shape for the engineering prototype */
+  shape: 'rectangle';
+
+  /** Hull width in visual units */
+  width: number;
+
+  /** Hull height in visual units */
+  height: number;
+
+  /** Optional short label rendered on the hull */
+  label?: string;
 }
 
 /**
@@ -70,31 +123,59 @@ export interface VisualRoundTimeline {
  * This allows a future renderer to know where effects should appear.
  */
 export interface HardpointDefinition {
-  /** Hardpoint identifier (matches WeaponDefinition.hardpoint) */
+  /** Hardpoint identifier for visual lookup */
   id: string;
+
+  /** Weapon identifier rendered at this hardpoint */
+  weaponId: string;
 
   /** Display name */
   name: string;
 
+  /** Short renderer label */
+  label: string;
+
   /** Position hint for rendering (e.g., 'left', 'right', 'center', 'top') */
   position: 'left' | 'right' | 'center' | 'top' | 'bottom';
 
+  /** Position relative to the ship origin in visual units */
+  location: {
+    x: number;
+    y: number;
+  };
+
   /** Weapon type hint for visual styling */
-  weaponType?: 'beam' | 'kinetic' | 'energy' | 'special';
+  weaponType?: 'beam' | 'torpedo' | 'kinetic' | 'energy' | 'special';
 }
 
 /**
- * Ship visual configuration
+ * Visualization-layer ship definition.
  *
- * Combines ship definition with hardpoint positioning for rendering.
+ * Contains only information required for rendering. It does not contain combat
+ * timing, damage, or scheduling rules.
  */
-export interface ShipVisualConfig {
-  /** Ship reference */
-  ship: Ship;
+export interface ShipVisualDefinition {
+  /** Ship identifier matching the domain ship id */
+  shipId: string;
+
+  /** Display name for rendering */
+  displayName: string;
+
+  /** Hull geometry for renderers */
+  hull: ShipHullGeometry;
 
   /** Hardpoint definitions for this ship */
   hardpoints: HardpointDefinition[];
+
+  /** Optional visual-only metadata */
+  metadata?: {
+    classification?: string;
+    faction?: string;
+  };
 }
+
+/** Backwards-compatible alias for early milestone docs and demos. */
+export type ShipVisualConfig = ShipVisualDefinition;
 
 /**
  * Timing configuration for visual event generation
@@ -146,7 +227,69 @@ function findHardpoint(
   weapon: WeaponDefinition,
   hardpoints: HardpointDefinition[]
 ): HardpointDefinition | undefined {
-  return hardpoints.find(hp => hp.id === weapon.hardpoint);
+  return hardpoints.find(
+    (hardpoint) =>
+      hardpoint.weaponId === weapon.id || hardpoint.id === weapon.hardpoint
+  );
+}
+
+/**
+ * Resolve hardpoint arrays from either a visual definition or a raw hardpoint list.
+ */
+function getHardpoints(
+  visualDefinitionOrHardpoints: ShipVisualDefinition | HardpointDefinition[]
+): HardpointDefinition[] {
+  return Array.isArray(visualDefinitionOrHardpoints)
+    ? visualDefinitionOrHardpoints
+    : visualDefinitionOrHardpoints.hardpoints;
+}
+
+/**
+ * Derive round-level weapon visual states from combat output.
+ *
+ * The renderer consumes these states without understanding warmup/cooldown rules.
+ */
+export function deriveWeaponVisualStates(
+  roundEvents: RoundEvents,
+  ship: Ship,
+  visualDefinitionOrHardpoints: ShipVisualDefinition | HardpointDefinition[]
+): WeaponVisualState[] {
+  const hardpoints = getHardpoints(visualDefinitionOrHardpoints);
+  const firingEvents = new Map<string, CombatEvent>();
+  const states: WeaponVisualState[] = [];
+
+  for (const event of roundEvents.events) {
+    if (event.type === 'weapon_fired' && event.weaponId) {
+      firingEvents.set(event.weaponId, event);
+    }
+  }
+
+  for (const weapon of ship.weapons || []) {
+    const hardpoint = findHardpoint(weapon, hardpoints);
+    if (!hardpoint) {
+      continue;
+    }
+
+    const firingEvent = firingEvents.get(weapon.id);
+    const state: WeaponVisualState = {
+      weaponId: weapon.id,
+      hardpointId: hardpoint.id,
+      state: firingEvent ? 'firing' : 'charging',
+      round: roundEvents.round,
+    };
+
+    if (firingEvent?.shots !== undefined) {
+      state.shots = firingEvent.shots;
+    }
+
+    if (firingEvent) {
+      state.timestamp = 0;
+    }
+
+    states.push(state);
+  }
+
+  return states;
 }
 
 /**
@@ -237,10 +380,11 @@ function transformWeaponFired(
 export function transformRoundToVisual(
   roundEvents: RoundEvents,
   ship: Ship,
-  hardpoints: HardpointDefinition[],
+  visualDefinitionOrHardpoints: ShipVisualDefinition | HardpointDefinition[],
   config: VisualTimingConfig = DEFAULT_TIMING
 ): VisualRoundTimeline {
   const visualEvents: VisualEvent[] = [];
+  const hardpoints = getHardpoints(visualDefinitionOrHardpoints);
 
   // Add round marker at start
   visualEvents.push({
@@ -277,6 +421,11 @@ export function transformRoundToVisual(
   return {
     round: roundEvents.round,
     events: visualEvents,
+    weaponStates: deriveWeaponVisualStates(
+      roundEvents,
+      ship,
+      visualDefinitionOrHardpoints
+    ),
     duration,
   };
 }
@@ -293,8 +442,10 @@ export function transformRoundToVisual(
 export function transformCombatToVisual(
   rounds: RoundEvents[],
   ship: Ship,
-  hardpoints: HardpointDefinition[],
+  visualDefinitionOrHardpoints: ShipVisualDefinition | HardpointDefinition[],
   config: VisualTimingConfig = DEFAULT_TIMING
 ): VisualRoundTimeline[] {
-  return rounds.map(round => transformRoundToVisual(round, ship, hardpoints, config));
+  return rounds.map((round) =>
+    transformRoundToVisual(round, ship, visualDefinitionOrHardpoints, config)
+  );
 }

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { generateCombatEvents } from '@stfc-vi/combat-model';
 import { augur } from '@stfc-vi/combat-model/examples';
 import { transformCombatToVisual, DEFAULT_TIMING, type VisualRoundTimeline } from '@stfc-vi/visualization-model';
-import { augurHardpoints } from '@stfc-vi/visualization-model/examples';
+import { augurVisualDefinition } from '@stfc-vi/visualization-model/examples';
 import ShipCanvas from './components/ShipCanvas';
 import PlaybackControls from './components/PlaybackControls';
 import TimelineDebug from './components/TimelineDebug';
@@ -20,7 +20,7 @@ export default function App() {
     const visualTimelines = transformCombatToVisual(
       combatEvents,
       augur,
-      augurHardpoints,
+      augurVisualDefinition,
       DEFAULT_TIMING
     );
     setTimelines(visualTimelines);
@@ -76,6 +76,7 @@ export default function App() {
         }}>
           <ShipCanvas
             timelines={timelines}
+            visualDefinition={augurVisualDefinition}
             isPlaying={isPlaying}
             playbackSpeed={playbackSpeed}
             currentTime={currentTime}

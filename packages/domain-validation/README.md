@@ -36,7 +36,7 @@ import {
 // Define source data (from stfc.space)
 const weaponData: WeaponSourceData = {
   weaponId: 'augur_beam_left',
-  warmup: 0,
+  warmup: 1,
   cooldown: 1,
   shots: 2,
 };

@@ -1,4 +1,8 @@
-import type { VisualRoundTimeline, VisualEvent } from '@stfc-vi/visualization-model';
+import type {
+  VisualEvent,
+  VisualRoundTimeline,
+  WeaponVisualState,
+} from '@stfc-vi/visualization-model';
 
 /**
  * Active visual events at a specific time
@@ -12,6 +16,9 @@ export interface ActiveEvents {
 
   /** Events active at this moment */
   active: VisualEvent[];
+
+  /** Round-level weapon visual states */
+  weaponStates: WeaponVisualState[];
 
   /** Upcoming events in next 500ms */
   upcoming: VisualEvent[];
@@ -113,6 +120,7 @@ export class PlaybackEngine {
         round: 1,
         roundTime: 0,
         active: [],
+        weaponStates: [],
         upcoming: [],
       };
     }
@@ -167,6 +175,7 @@ export class PlaybackEngine {
       round: currentTimeline.round,
       roundTime,
       active,
+      weaponStates: currentTimeline.weaponStates,
       upcoming,
     };
   }

@@ -18,7 +18,7 @@ import {
   DEFAULT_TIMING,
   type VisualEvent,
 } from '@stfc-vi/visualization-model';
-import { augurHardpoints } from '@stfc-vi/visualization-model/examples';
+import { augurVisualDefinition } from '@stfc-vi/visualization-model/examples';
 
 /**
  * Format timestamp as milliseconds with padding
@@ -68,7 +68,7 @@ function displayRoundTimeline() {
   console.log('='.repeat(80));
   console.log();
   console.log(`Ship: ${augur.name} (${augur.classification})`);
-  console.log(`Hardpoints: ${augurHardpoints.length}`);
+  console.log(`Hardpoints: ${augurVisualDefinition.hardpoints.length}`);
   console.log();
   console.log('Timing Configuration:');
   console.log(`  Muzzle Flash Delay:     ${DEFAULT_TIMING.muzzleFlashDelay}ms`);
@@ -89,7 +89,7 @@ function displayRoundTimeline() {
   const visualTimelines = transformCombatToVisual(
     combatRounds,
     augur,
-    augurHardpoints,
+    augurVisualDefinition,
     DEFAULT_TIMING
   );
 

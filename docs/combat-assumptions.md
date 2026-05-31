@@ -187,7 +187,7 @@ In PvP combat, the attacking ship (initiator) enters the firing sequence before 
 **Impact if False**:
 - MEDIUM: Would need combat context (attacker/defender roles) in event generation
 - Would affect multi-ship visualization
-- Currently out of scope (single-ship visualization only)
+- Would require revising the current interleaved visualization ordering implementation
 
 **Affected Packages**:
 - `combat-model`: Would need role tracking for multi-ship scenarios
@@ -207,7 +207,7 @@ In PvP combat, the attacking ship (initiator) enters the firing sequence before 
 - Out of scope for current milestone (single-ship only)
 
 **Mitigation**:
-If false, would require role context in combat generation. Not urgent (multi-ship is future milestone).
+If false, revise the two-ship ordering algorithm while preserving the CombatEvent role metadata now emitted by combat-model.
 
 ---
 

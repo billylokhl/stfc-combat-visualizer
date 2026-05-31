@@ -37,14 +37,14 @@
 ```
 For each round R (starting at 1):
   For each weapon W:
-    If (R == 1 + warmup) OR (R > last_fire + cooldown):
+    If (R == warmup) OR ((R - warmup) % cooldown == 0):
       Fire weapon W (shots times)
       Record last_fire = R
 ```
 
 **Assumptions**:
 - Rounds are 1-second duration
-- Warmup is delay before first firing (0 means fires in round 1)
+- Warmup is the first activation round (warmup=1 means fires in round 1)
 - Cooldown is delay after firing before next firing
 - All shots in a burst occur within the same round
 
@@ -60,28 +60,28 @@ For each round R (starting at 1):
 
 | # | Weapon Name | Warmup | Cooldown | Shots |
 |---|-------------|--------|----------|-------|
-| 1 | Beam Array (Left) | 0s | 1s | 2 |
-| 2 | Beam Array (Right) | 0s | 1s | 2 |
-| 3 | Obliterator Torpedo | 2s | 3s | 1 |
+| 1 | Beam Array (Left) | 1 | 1 | 2 |
+| 2 | Beam Array (Right) | 1 | 1 | 2 |
+| 3 | Obliterator Torpedo | 2 | 3 | 1 |
 
 **Derived Firing Pattern** (rounds 1-15):
 
 ```
 Round  1: Beam(L) x2, Beam(R) x2
-Round  2: Beam(L) x2, Beam(R) x2
-Round  3: Beam(L) x2, Beam(R) x2, Torpedo x1
+Round  2: Beam(L) x2, Beam(R) x2, Torpedo x1
+Round  3: Beam(L) x2, Beam(R) x2
 Round  4: Beam(L) x2, Beam(R) x2
-Round  5: Beam(L) x2, Beam(R) x2
-Round  6: Beam(L) x2, Beam(R) x2, Torpedo x1
+Round  5: Beam(L) x2, Beam(R) x2, Torpedo x1
+Round  6: Beam(L) x2, Beam(R) x2
 Round  7: Beam(L) x2, Beam(R) x2
-Round  8: Beam(L) x2, Beam(R) x2
-Round  9: Beam(L) x2, Beam(R) x2, Torpedo x1
+Round  8: Beam(L) x2, Beam(R) x2, Torpedo x1
+Round  9: Beam(L) x2, Beam(R) x2
 Round 10: Beam(L) x2, Beam(R) x2
-Round 11: Beam(L) x2, Beam(R) x2
-Round 12: Beam(L) x2, Beam(R) x2, Torpedo x1
+Round 11: Beam(L) x2, Beam(R) x2, Torpedo x1
+Round 12: Beam(L) x2, Beam(R) x2
 Round 13: Beam(L) x2, Beam(R) x2
-Round 14: Beam(L) x2, Beam(R) x2
-Round 15: Beam(L) x2, Beam(R) x2, Torpedo x1
+Round 14: Beam(L) x2, Beam(R) x2, Torpedo x1
+Round 15: Beam(L) x2, Beam(R) x2
 ```
 
 **Current FiringSchedule Representation**:
@@ -94,7 +94,7 @@ weapons: [
 ```
 
 **Analysis**:
-- ✅ Beam arrays: `firesEveryRound` ≡ `warmup: 0, cooldown: 1`
+- ✅ Beam arrays: `firesEveryRound` ≡ `warmup: 1, cooldown: 1`
 - ✅ Torpedo: `interval: { every: 3, startRound: 2 }` ≡ `warmup: 2, cooldown: 3`
 - ✅ Perfect match between derived and authored patterns
 
@@ -319,8 +319,8 @@ Current abstractions map directly to warmup/cooldown:
 
 | FiringSchedule Type | Warmup/Cooldown Equivalent |
 |---------------------|----------------------------|
-| `firesEveryRound` | `warmup: 0, cooldown: 1` |
-| `interval: { every: N, startRound: R }` | `warmup: R-1, cooldown: N` |
+| `firesEveryRound` | `warmup: 1, cooldown: 1` |
+| `interval: { every: N, startRound: R }` | `warmup: R, cooldown: N` |
 | `specificRounds: [...]` | Cannot be derived (but none found) |
 
 **3. Shot count works naturally**
@@ -391,7 +391,7 @@ weapons: [
 
 // After (authored):
 weapons: [
-  { id: 'beam', warmup: 0, cooldown: 1, shots: 2 }
+  { id: 'beam', warmup: 1, cooldown: 1, shots: 2 }
 ]
 
 // Internal (derived during event generation):
@@ -449,7 +449,7 @@ function weaponFiresOnRound(weapon: WeaponDefinition, round: number): number
 // After:
 function weaponFiresOnRound(weapon: WeaponDefinition, round: number): number {
   // Derive firing schedule from warmup/cooldown
-  const firstRound = 1 + weapon.warmup;
+  const firstRound = weapon.warmup || 1;
   if (round < firstRound) return 0;
   if ((round - firstRound) % weapon.cooldown === 0) return weapon.shots;
   return 0;

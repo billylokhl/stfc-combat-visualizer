@@ -99,6 +99,47 @@ Examples:
 
 Combat events should become the canonical interface between combat logic and visual rendering.
 
+### Ship Visual Definition
+Represents visualization-only ship data required by renderers.
+
+Responsibilities:
+
+- ship id and display name
+- hull geometry
+- hardpoint locations
+- visual-only metadata
+
+Does not contain:
+
+- warmup
+- cooldown
+- damage
+- combat sequencing
+- weapon scheduling rules
+
+### Hardpoint Definition
+Represents where a weapon appears on a ship in the renderer.
+
+Responsibilities:
+
+- hardpoint id
+- referenced weapon id
+- visual label
+- visual position
+- optional visual type hint
+
+Hardpoints belong to a `ShipVisualDefinition`. They reference weapons by id but do not contain combat timing logic.
+
+### Weapon Visual State
+Represents renderer-friendly weapon state for a round.
+
+Supported states:
+
+- Charging
+- Firing
+
+There is no Idle state. Weapon visual states are derived from combat output upstream of the renderer.
+
 ---
 
 ## Package Responsibilities
@@ -160,6 +201,25 @@ Contains:
 - Asset metadata
 
 No business logic.
+
+---
+
+### visualization-model
+Contains:
+
+- CombatEvent[] to VisualEvent[] transformation
+- ShipVisualDefinition type definitions
+- HardpointDefinition type definitions
+- WeaponVisualState type definitions
+- Round-level visual state derivation
+
+No UI code.
+
+No rendering code.
+
+No DOM, Canvas, or React dependencies.
+
+**Principle**: Visualization-model converts combat output into renderer-friendly presentation data. Renderers consume visual definitions and visual states without understanding warmup/cooldown rules.
 
 ---
 

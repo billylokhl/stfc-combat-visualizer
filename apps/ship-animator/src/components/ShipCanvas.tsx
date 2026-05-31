@@ -1,10 +1,14 @@
 import { useEffect, useRef } from 'react';
-import type { VisualRoundTimeline } from '@stfc-vi/visualization-model';
+import type {
+  ShipVisualDefinition,
+  VisualRoundTimeline,
+} from '@stfc-vi/visualization-model';
 import { PlaybackEngine } from '../engine/PlaybackEngine';
 import { CanvasRenderer } from '../renderer/CanvasRenderer';
 
 interface ShipCanvasProps {
   timelines: VisualRoundTimeline[];
+  visualDefinition: ShipVisualDefinition;
   isPlaying: boolean;
   playbackSpeed: number;
   currentTime: number;
@@ -15,6 +19,7 @@ interface ShipCanvasProps {
 
 export default function ShipCanvas({
   timelines,
+  visualDefinition,
   isPlaying,
   playbackSpeed,
   onTimeUpdate,
@@ -39,7 +44,7 @@ export default function ShipCanvas({
 
     // Create engine and renderer
     engineRef.current = new PlaybackEngine(timelines);
-    rendererRef.current = new CanvasRenderer(canvas);
+  rendererRef.current = new CanvasRenderer(canvas, visualDefinition);
 
     // Resize handler
     const handleResize = () => {
@@ -54,7 +59,7 @@ export default function ShipCanvas({
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, [timelines]);
+  }, [timelines, visualDefinition]);
 
   // Update engine state when controls change
   useEffect(() => {
@@ -87,7 +92,12 @@ export default function ShipCanvas({
       onRoundUpdate(state.round);
 
       // Render
-      renderer.render(state.round, state.roundTime, state.active);
+      renderer.render(
+        state.round,
+        state.roundTime,
+        state.active,
+        state.weaponStates
+      );
 
       // Continue loop
       animationFrameRef.current = requestAnimationFrame(animate);
