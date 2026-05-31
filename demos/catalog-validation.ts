@@ -6,6 +6,10 @@ import { weaponFiresOnRound } from '@stfc-vi/combat-model';
 function printShip(shipEntry: any) {
   console.log('='.repeat(60));
   console.log(`Ship: ${shipEntry.name} (${shipEntry.id})`);
+  console.log(`  Verification Status: ${shipEntry.verificationStatus || 'unknown'}`);
+  if (shipEntry.notes) {
+    console.log(`  Notes: ${shipEntry.notes}`);
+  }
   const ship: Ship | undefined = shipEntry.ship;
   if (!ship) {
     console.log('  No domain ship definition available (placeholder)');
