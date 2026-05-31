@@ -1,13 +1,36 @@
 {
-  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "rootDir": "src"
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+
+    /* Path aliases */
+    "baseUrl": ".",
+    "paths": {
+      "@stfc-vi/ship-model": ["../../packages/ship-model/src"],
+      "@stfc-vi/ship-model/*": ["../../packages/ship-model/src/*"],
+      "@stfc-vi/combat-model": ["../../packages/combat-model/src"],
+      "@stfc-vi/combat-model/*": ["../../packages/combat-model/src/*"],
+      "@stfc-vi/visualization-model": ["../../packages/visualization-model/src"],
+      "@stfc-vi/visualization-model/*": ["../../packages/visualization-model/src/*"]
+    }
   },
-  "include": ["src/**/*"],
-  "references": [
-    { "path": "../../packages/ship-model" },
-    { "path": "../../packages/combat-model" },
-    { "path": "../../packages/asset-library" }
-  ]
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
 }
