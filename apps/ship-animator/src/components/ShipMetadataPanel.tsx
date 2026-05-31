@@ -2,6 +2,7 @@ import type { ShipCatalogEntry, VerificationStatus, ProvenanceCategory } from '@
 
 interface ShipMetadataPanelProps {
   entry: ShipCatalogEntry;
+  defender?: ShipCatalogEntry;
 }
 
 const VERIFICATION_LABELS: Record<VerificationStatus, string> = {
@@ -63,7 +64,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-export default function ShipMetadataPanel({ entry }: ShipMetadataPanelProps) {
+export default function ShipMetadataPanel({ entry, defender }: ShipMetadataPanelProps) {
   const weaponCount = entry.ship?.weapons?.length ?? 0;
   const hardpointCount = entry.visual?.hardpoints?.length ?? 0;
   const coverageIncomplete = weaponCount > 0 && hardpointCount < weaponCount;
@@ -76,56 +77,124 @@ export default function ShipMetadataPanel({ entry }: ShipMetadataPanelProps) {
       fontSize: '13px',
       color: '#ccc',
     }}>
-      <Row label="Ship">
-        <span style={{ fontWeight: 600, color: '#e0e0e0' }}>{entry.name}</span>
-      </Row>
+      <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <div style={{ minWidth: 220 }}>
+          <Row label="Attacker">
+            <span style={{ fontWeight: 600, color: '#e0e0e0' }}>{entry.name}</span>
+          </Row>
 
-      <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
-        <Row label="Verification">
-          <Badge
-            label={VERIFICATION_LABELS[entry.verificationStatus]}
-            color={VERIFICATION_COLORS[entry.verificationStatus]}
-          />
-        </Row>
+          <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+            <Row label="Verification">
+              <Badge
+                label={VERIFICATION_LABELS[entry.verificationStatus]}
+                color={VERIFICATION_COLORS[entry.verificationStatus]}
+              />
+            </Row>
 
-        <Row label="Provenance">
-          <Badge
-            label={PROVENANCE_LABELS[entry.provenanceCategory]}
-            color={PROVENANCE_COLORS[entry.provenanceCategory]}
-          />
-        </Row>
-      </div>
+            <Row label="Provenance">
+              <Badge
+                label={PROVENANCE_LABELS[entry.provenanceCategory]}
+                color={PROVENANCE_COLORS[entry.provenanceCategory]}
+              />
+            </Row>
+          </div>
 
-      {weaponCount > 0 && (
-        <Row label="Visual Coverage">
-          <span style={{ color: coverageIncomplete ? '#ff9800' : '#4caf50' }}>
-            {hardpointCount} / {weaponCount} weapons mapped
-          </span>
-        </Row>
-      )}
+          {weaponCount > 0 && (
+            <Row label="Visual Coverage">
+              <span style={{ color: coverageIncomplete ? '#ff9800' : '#4caf50' }}>
+                {hardpointCount} / {weaponCount} weapons mapped
+              </span>
+            </Row>
+          )}
 
-      {coverageIncomplete && (
-        <div style={{
-          marginBottom: '10px',
-          padding: '8px 10px',
-          background: '#ff980018',
-          border: '1px solid #ff980055',
-          borderRadius: '3px',
-          fontSize: '11px',
-          color: '#ff9800',
-          lineHeight: '1.5',
-        }}>
-          Visualization configuration is incomplete. Only {hardpointCount} of {weaponCount} weapons are currently mapped to hardpoints.
+          {coverageIncomplete && (
+            <div style={{
+              marginBottom: '10px',
+              padding: '8px 10px',
+              background: '#ff980018',
+              border: '1px solid #ff980055',
+              borderRadius: '3px',
+              fontSize: '11px',
+              color: '#ff9800',
+              lineHeight: '1.5',
+            }}>
+              Visualization configuration is incomplete. Only {hardpointCount} of {weaponCount} weapons are currently mapped to hardpoints.
+            </div>
+          )}
+
+          {entry.notes && (
+            <Row label="Notes">
+              <span style={{ fontSize: '11px', color: '#888', lineHeight: '1.5' }}>
+                {entry.notes}
+              </span>
+            </Row>
+          )}
         </div>
-      )}
 
-      {entry.notes && (
-        <Row label="Notes">
-          <span style={{ fontSize: '11px', color: '#888', lineHeight: '1.5' }}>
-            {entry.notes}
-          </span>
-        </Row>
-      )}
+        {defender && (
+          <div style={{ minWidth: 220 }}>
+            <Row label="Defender">
+              <span style={{ fontWeight: 600, color: '#e0e0e0' }}>{defender.name}</span>
+            </Row>
+
+            <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+              <Row label="Verification">
+                <Badge
+                  label={VERIFICATION_LABELS[defender.verificationStatus]}
+                  color={VERIFICATION_COLORS[defender.verificationStatus]}
+                />
+              </Row>
+
+              <Row label="Provenance">
+                <Badge
+                  label={PROVENANCE_LABELS[defender.provenanceCategory]}
+                  color={PROVENANCE_COLORS[defender.provenanceCategory]}
+                />
+              </Row>
+            </div>
+
+            {(() => {
+              const wCount = defender.ship?.weapons?.length ?? 0;
+              const hpCount = defender.visual?.hardpoints?.length ?? 0;
+              const incomplete = wCount > 0 && hpCount < wCount;
+              return (
+                <>
+                  {wCount > 0 && (
+                    <Row label="Visual Coverage">
+                      <span style={{ color: incomplete ? '#ff9800' : '#4caf50' }}>
+                        {hpCount} / {wCount} weapons mapped
+                      </span>
+                    </Row>
+                  )}
+
+                  {incomplete && (
+                    <div style={{
+                      marginBottom: '10px',
+                      padding: '8px 10px',
+                      background: '#ff980018',
+                      border: '1px solid #ff980055',
+                      borderRadius: '3px',
+                      fontSize: '11px',
+                      color: '#ff9800',
+                      lineHeight: '1.5',
+                    }}>
+                      Visualization configuration is incomplete. Only {hpCount} of {wCount} weapons are currently mapped to hardpoints.
+                    </div>
+                  )}
+
+                  {defender.notes && (
+                    <Row label="Notes">
+                      <span style={{ fontSize: '11px', color: '#888', lineHeight: '1.5' }}>
+                        {defender.notes}
+                      </span>
+                    </Row>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

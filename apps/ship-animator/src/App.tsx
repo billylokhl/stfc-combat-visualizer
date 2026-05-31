@@ -120,7 +120,7 @@ export default function App() {
         </h1>
       </div>
 
-      <ShipMetadataPanel entry={attackerEntry} />
+      <ShipMetadataPanel entry={attackerEntry} defender={defenderEntry} />
 
       <div style={{
         display: 'flex',
