@@ -62,8 +62,8 @@ function displayRoundEvents() {
       console.log(`  Cooldown: ${weapon.cooldown} rounds`);
       console.log(`  Shots: ${weapon.shots} per activation`);
 
-      // Calculate first firing round
-      const firstRound = 1 + weapon.warmup;
+      // Calculate first firing round (warmup is the round number, not a delay)
+      const firstRound = weapon.warmup || 1;
       console.log(`  → Fires starting round ${firstRound}, then every ${weapon.cooldown} rounds`);
 
       console.log();
