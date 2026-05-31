@@ -7,7 +7,7 @@ import type { Ship } from '@stfc-vi/ship-model';
  * - Weapon timing (warmup/cooldown/shots) are approximations derived from
  *   earlier analysis and community references. They should be verified against
  *   battle logs for production accuracy.
- * - Hardpoint ids chosen to match visualization placeholders in
+ * - Hardpoint ids correspond to distinct hardpoints in
  *   visualization-model/examples/vengeance-visual.ts
  */
 export const vengeance: Ship = {
@@ -21,7 +21,7 @@ export const vengeance: Ship = {
       id: 'vengeance_photon',
       name: 'Photon Torpedo',
       type: 'torpedo',
-      hardpoint: 'vengeance_front_hp',
+      hardpoint: 'vengeance_photon_hp',
       damageType: 'kinetic',
       averageDamage: 12000,
       warmup: 1,
@@ -32,7 +32,7 @@ export const vengeance: Ship = {
       id: 'vengeance_phaser',
       name: 'Phaser Bank',
       type: 'beam',
-      hardpoint: 'vengeance_front_hp',
+      hardpoint: 'vengeance_phaser_hp',
       damageType: 'energy',
       averageDamage: 4000,
       warmup: 1,
@@ -43,7 +43,7 @@ export const vengeance: Ship = {
       id: 'vengeance_pulse',
       name: 'Pulse Phaser',
       type: 'beam',
-      hardpoint: 'vengeance_front_hp',
+      hardpoint: 'vengeance_pulse_hp',
       damageType: 'energy',
       averageDamage: 3000,
       warmup: 2,
@@ -54,7 +54,7 @@ export const vengeance: Ship = {
       id: 'vengeance_quantum',
       name: 'Quantum Torpedo',
       type: 'torpedo',
-      hardpoint: 'vengeance_front_hp',
+      hardpoint: 'vengeance_quantum_hp',
       damageType: 'special',
       averageDamage: 20000,
       warmup: 4,
