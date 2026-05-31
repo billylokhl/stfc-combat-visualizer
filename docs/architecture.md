@@ -9,6 +9,32 @@ UI should never contain ship-specific combat logic.
 
 ---
 
+## Relationship to Domain Notes
+
+**This architecture is based on our current understanding of STFC combat mechanics.**
+
+Before modifying `combat-model`, `ship-model`, `visualization-model`, or `ship-animator`, consult:
+
+**[docs/domain-notes.md](domain-notes.md)**
+
+Domain notes document:
+- Confirmed discoveries about STFC combat mechanics
+- Likely-true assumptions with confidence levels and evidence
+- Open questions requiring research
+- Architectural implications of domain understanding
+
+**Architecture should follow domain understanding, not the other way around.**
+
+When domain understanding changes (new discoveries, corrected assumptions), architecture should adapt accordingly. If research reveals that the current model misrepresents STFC mechanics, the model should be refactored to match reality.
+
+Before proposing architectural changes to domain models:
+1. Check domain notes for relevant discoveries and assumptions
+2. Identify what domain knowledge supports or contradicts the change
+3. Update domain notes with new findings
+4. Ensure the change improves domain correctness, not just code elegance
+
+---
+
 ## Monorepo Structure
 stfc-visual-intelligence/
 
