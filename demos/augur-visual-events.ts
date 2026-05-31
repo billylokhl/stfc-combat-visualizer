@@ -12,13 +12,16 @@
  */
 
 import { generateCombatEvents } from '@stfc-vi/combat-model';
-import { augur } from '@stfc-vi/combat-model/examples';
+import { getShipById } from '@stfc-vi/visualization-model/examples';
 import {
   transformCombatToVisual,
   DEFAULT_TIMING,
   type VisualEvent,
 } from '@stfc-vi/visualization-model';
-import { augurVisualDefinition } from '@stfc-vi/visualization-model/examples';
+
+const augurEntry = getShipById('augur');
+const augur = augurEntry?.ship as any;
+const augurVisualDefinition = augurEntry?.visual!;
 
 /**
  * Format timestamp as milliseconds with padding

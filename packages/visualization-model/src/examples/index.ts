@@ -7,3 +7,6 @@ export {
 	augurVisualConfig,
 	augurVisualDefinition,
 } from './augur-visual';
+export { vengeanceVisualDefinition } from './vengeance-visual';
+export { kelvinVisualDefinition } from './kelvin-visual';
+export { listShips, getShipById } from './catalog';

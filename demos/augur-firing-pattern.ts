@@ -12,7 +12,10 @@
  */
 
 import { generateCombatEvents } from '@stfc-vi/combat-model';
-import { augur } from '@stfc-vi/combat-model/examples';
+import { getShipById } from '@stfc-vi/visualization-model/examples';
+
+const augurEntry = getShipById('augur');
+const augur = augurEntry?.ship as any;
 
 /**
  * Format and display round events in a readable format

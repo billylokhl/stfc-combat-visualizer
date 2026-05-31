@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { generateCombatEvents } from '@stfc-vi/combat-model';
-import { augur } from '@stfc-vi/combat-model/examples';
 import { transformCombatToVisual, DEFAULT_TIMING, type VisualRoundTimeline } from '@stfc-vi/visualization-model';
-import { augurVisualDefinition } from '@stfc-vi/visualization-model/examples';
+import { getShipById } from '@stfc-vi/visualization-model/examples';
 import ShipCanvas from './components/ShipCanvas';
 import PlaybackControls from './components/PlaybackControls';
 import TimelineDebug from './components/TimelineDebug';
@@ -16,11 +15,14 @@ export default function App() {
 
   // Generate timelines on mount
   useEffect(() => {
-    const combatEvents = generateCombatEvents(augur, 1, 15);
+    const entry = getShipById('augur');
+    const ship = entry?.ship as any;
+    const visualDef = entry?.visual;
+    const combatEvents = generateCombatEvents(ship, 1, 15);
     const visualTimelines = transformCombatToVisual(
       combatEvents,
-      augur,
-      augurVisualDefinition,
+      ship,
+      visualDef!,
       DEFAULT_TIMING
     );
     setTimelines(visualTimelines);
@@ -76,7 +78,7 @@ export default function App() {
         }}>
           <ShipCanvas
             timelines={timelines}
-            visualDefinition={augurVisualDefinition}
+            visualDefinition={getShipById('augur')!.visual!}
             isPlaying={isPlaying}
             playbackSpeed={playbackSpeed}
             currentTime={currentTime}

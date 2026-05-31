@@ -11,8 +11,11 @@
  */
 
 import { generateTwoShipCombat } from '@stfc-vi/combat-model';
-import { augur } from '@stfc-vi/combat-model/examples';
+import { getShipById } from '@stfc-vi/visualization-model/examples';
 import type { Ship } from '@stfc-vi/ship-model';
+
+const augurEntry = getShipById('augur');
+const augur = augurEntry?.ship as Ship;
 
 // Create a second ship (simplified Augur variant for demo)
 const augurDefender: Ship = {
