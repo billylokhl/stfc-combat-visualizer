@@ -2,7 +2,7 @@ import type { Ship } from '@stfc-vi/ship-model';
 import { augur as augurShip } from '@stfc-vi/combat-model/examples/augur';
 import { vengeance as vengeanceShip } from '@stfc-vi/combat-model/examples/vengeance';
 import { kelvin as kelvinShip } from '@stfc-vi/combat-model/examples/kelvin';
-import { augurVisualConfig, augurHardpoints, augurVisualDefinition } from './augur-visual';
+import { augurVisualDefinition } from './augur-visual';
 import { vengeanceVisualDefinition } from './vengeance-visual';
 import { kelvinVisualDefinition } from './kelvin-visual';
 import type { ShipVisualDefinition } from '../index';

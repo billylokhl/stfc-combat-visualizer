@@ -48,6 +48,13 @@ export interface Ship {
   firingPatterns?: FiringPattern[];
 }
 
+/** Minimal FiringPattern marker type used for provenance/validation scaffolding.
+ * Kept intentionally minimal — details belong in domain-validation package.
+ */
+export interface FiringPattern {
+  // placeholder for structured firing pattern metadata
+}
+
 /**
  * Weapon type classification
  */
