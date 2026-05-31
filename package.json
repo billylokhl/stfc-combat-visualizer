@@ -14,6 +14,7 @@
     "demo:visual": "ts-node --project tsconfig.demo.json demos/augur-visual-events.ts",
     "demo:validation": "ts-node --project tsconfig.demo.json demos/domain-validation.ts",
     "demo:two-ship": "ts-node --project tsconfig.demo.json demos/two-ship-combat.ts"
+    ,"demo:catalog": "ts-node --project tsconfig.demo.json demos/catalog-validation.ts"
   },
   "devDependencies": {
     "typescript": "^5.0.0",

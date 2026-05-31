@@ -1,5 +1,7 @@
 import type { Ship } from '@stfc-vi/ship-model';
-import { augur as augurShip } from '@stfc-vi/combat-model/examples';
+import { augur as augurShip } from '@stfc-vi/combat-model/examples/augur';
+import { vengeance as vengeanceShip } from '@stfc-vi/combat-model/examples/vengeance';
+import { kelvin as kelvinShip } from '@stfc-vi/combat-model/examples/kelvin';
 import { augurVisualConfig, augurHardpoints, augurVisualDefinition } from './augur-visual';
 import { vengeanceVisualDefinition } from './vengeance-visual';
 import { kelvinVisualDefinition } from './kelvin-visual';
@@ -23,15 +25,17 @@ const CATALOG: ShipCatalogEntry[] = [
   },
   {
     id: 'vengeance',
-    name: 'Vengeance (placeholder)',
+    name: 'Vengeance',
+    ship: vengeanceShip,
     visual: vengeanceVisualDefinition,
-    notes: 'Placeholder visual definition; domain ship not yet provided.',
+    notes: 'Vengeance ship definition added to catalog (timing values are approximate, see file for assumptions).',
   },
   {
     id: 'kelvin',
-    name: 'Kelvin (placeholder)',
+    name: 'Kelvin',
+    ship: kelvinShip,
     visual: kelvinVisualDefinition,
-    notes: 'Placeholder visual definition; domain ship not yet provided.',
+    notes: 'Kelvin ship definition added to catalog (timing values are approximate, see file for assumptions).',
   },
 ];
 

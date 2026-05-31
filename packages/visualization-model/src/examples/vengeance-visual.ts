@@ -14,7 +14,7 @@ export const vengeanceVisualDefinition: ShipVisualDefinition = {
   hardpoints: [
     {
       id: 'vengeance_front_hp',
-      weaponId: 'vengeance_front',
+      weaponId: 'vengeance_photon',
       name: 'Front Hardpoint',
       label: 'F',
       position: 'center',

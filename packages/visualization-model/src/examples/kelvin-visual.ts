@@ -14,7 +14,7 @@ export const kelvinVisualDefinition: ShipVisualDefinition = {
   hardpoints: [
     {
       id: 'kelvin_left_hp',
-      weaponId: 'kelvin_left',
+      weaponId: 'kelvin_phaser1',
       name: 'Left Hardpoint',
       label: 'L',
       position: 'left',
@@ -23,7 +23,7 @@ export const kelvinVisualDefinition: ShipVisualDefinition = {
     },
     {
       id: 'kelvin_right_hp',
-      weaponId: 'kelvin_right',
+      weaponId: 'kelvin_phaser2',
       name: 'Right Hardpoint',
       label: 'R',
       position: 'right',
