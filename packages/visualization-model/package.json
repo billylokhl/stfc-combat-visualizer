@@ -1,0 +1,20 @@
+{
+  "name": "@stfc-vi/visualization-model",
+  "version": "0.1.0",
+  "description": "Combat-to-visual event transformation layer",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "keywords": ["stfc", "visualization", "events"],
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@stfc-vi/ship-model": "^0.1.0",
+    "@stfc-vi/combat-model": "^0.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

@@ -23,7 +23,7 @@ export const augur: Ship = {
     {
       id: 'left_beam',
       name: 'Left Beam',
-      hardpoint: 'primary',
+      hardpoint: 'left_beam',
       damageType: 'energy',
       averageDamage: 5000,
       shotsPerActivation: 2,
@@ -34,7 +34,7 @@ export const augur: Ship = {
     {
       id: 'right_beam',
       name: 'Right Beam',
-      hardpoint: 'primary',
+      hardpoint: 'right_beam',
       damageType: 'energy',
       averageDamage: 5000,
       shotsPerActivation: 2,
@@ -45,7 +45,7 @@ export const augur: Ship = {
     {
       id: 'obliterator',
       name: 'Obliterator',
-      hardpoint: 'special',
+      hardpoint: 'obliterator',
       damageType: 'energy',
       averageDamage: 15000,
       shotsPerActivation: 1,
