@@ -88,12 +88,12 @@ export interface WeaponDefinition {
   averageDamage?: number;
 
   /**
-   * Warmup: Number of rounds before weapon can first fire
+   * Warmup: Round number when the weapon first activates
    *
-   * Examples:
-   * - warmup = 0: weapon fires starting round 1
-   * - warmup = 1: weapon fires starting round 2
-   * - warmup = 2: weapon fires starting round 3
+   * Semantics:
+   * - warmup = 1 → first activation in round 1
+   * - warmup = 2 → first activation in round 2
+   * - warmup = N → first activation in round N
    */
   warmup: number;
 
