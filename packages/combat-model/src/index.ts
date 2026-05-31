@@ -5,7 +5,7 @@
  * No UI code. No animation code.
  */
 
-import type { Ship, WeaponDefinition, FiringSchedule } from '@stfc-vi/ship-model';
+import type { Ship, WeaponDefinition } from '@stfc-vi/ship-model';
 
 /**
  * Represents a combat action occurring in a specific round.
@@ -41,25 +41,29 @@ export interface RoundEvents {
 }
 
 /**
- * Determine if a weapon fires on a specific round based on its firing schedule
+ * Determine if a weapon fires on a specific round based on warmup/cooldown timing
+ *
+ * Algorithm:
+ * 1. First firing round = 1 + warmup
+ * 2. Weapon fires if: round == firstRound OR (round - firstRound) % cooldown == 0
+ *
+ * Examples:
+ * - warmup=0, cooldown=1: fires rounds 1,2,3,4,5... (every round)
+ * - warmup=1, cooldown=3: fires rounds 2,5,8,11,14... (every 3 rounds starting round 2)
+ * - warmup=2, cooldown=2: fires rounds 3,5,7,9,11... (every 2 rounds starting round 3)
  */
-export function weaponFiresOnRound(schedule: FiringSchedule, round: number): boolean {
-  switch (schedule.type) {
-    case 'every_round':
-      return true;
+export function weaponFiresOnRound(weapon: WeaponDefinition, round: number): boolean {
+  const firstRound = 1 + weapon.warmup;
 
-    case 'interval':
-      if (round < schedule.startRound) {
-        return false;
-      }
-      return (round - schedule.startRound) % schedule.interval === 0;
-
-    case 'specific_rounds':
-      return schedule.rounds.includes(round);
-
-    default:
-      return false;
+  if (round < firstRound) {
+    return false;
   }
+
+  if (round === firstRound) {
+    return true;
+  }
+
+  return (round - firstRound) % weapon.cooldown === 0;
 }
 
 /**
@@ -81,13 +85,13 @@ export function generateRoundEvents(ship: Ship, round: number): CombatEvent[] {
   // Check each weapon
   if (ship.weapons) {
     for (const weapon of ship.weapons) {
-      if (weaponFiresOnRound(weapon.firingSchedule, round)) {
+      if (weaponFiresOnRound(weapon, round)) {
         events.push({
           type: 'weapon_fired',
           round,
           weaponId: weapon.id,
           weaponName: weapon.name,
-          shots: weapon.shotsPerActivation,
+          shots: weapon.shots,
         });
       }
     }

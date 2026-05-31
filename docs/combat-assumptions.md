@@ -20,9 +20,9 @@ Before modifying domain models (ship-model, combat-model, visualization-model):
 
 ### ASSUMPTION-001: Warmup/Cooldown/Shots Fully Determine Firing Pattern
 
-**ID**: ASSUMPTION-001  
-**Category**: Combat Mechanics  
-**Confidence**: 90%  
+**ID**: ASSUMPTION-001
+**Category**: Combat Mechanics
+**Confidence**: 90%
 **Status**: 🔬 Hypothesis (unverified)
 
 **Description**:
@@ -71,9 +71,9 @@ No manual schedule authoring is required.
 
 ### ASSUMPTION-002: Weapon Listing Order Equals Firing Order
 
-**ID**: ASSUMPTION-002  
-**Category**: Combat Mechanics  
-**Confidence**: 70%  
+**ID**: ASSUMPTION-002
+**Category**: Combat Mechanics
+**Confidence**: 70%
 **Status**: 🔬 Hypothesis (unverified)
 
 **Description**:
@@ -118,9 +118,9 @@ If false, adding `firingPriority` field is low-impact (optional field, defaults 
 
 ### ASSUMPTION-003: Round Duration Is Constant at 1 Second
 
-**ID**: ASSUMPTION-003  
-**Category**: Combat Timing  
-**Confidence**: 50%  
+**ID**: ASSUMPTION-003
+**Category**: Combat Timing
+**Confidence**: 50%
 **Status**: ❓ Unknown (no evidence)
 
 **Description**:
@@ -164,9 +164,9 @@ If false, adding configurable round duration is trivial (single parameter).
 
 ### ASSUMPTION-004: Attacker Fires Before Defender in PvP
 
-**ID**: ASSUMPTION-004  
-**Category**: Combat Sequencing  
-**Confidence**: 60%  
+**ID**: ASSUMPTION-004
+**Category**: Combat Sequencing
+**Confidence**: 60%
 **Status**: 🔬 Hypothesis (community knowledge)
 
 **Description**:
@@ -211,9 +211,9 @@ If false, would require role context in combat generation. Not urgent (multi-shi
 
 ### ASSUMPTION-005: Hardpoint Positions Are Visualization-Only
 
-**ID**: ASSUMPTION-005  
-**Category**: Architecture  
-**Confidence**: 100%  
+**ID**: ASSUMPTION-005
+**Category**: Architecture
+**Confidence**: 100%
 **Status**: ✅ Confirmed
 
 **Description**:
@@ -248,9 +248,9 @@ Hardpoint positions (left/right/center) are presentation-layer decisions, not co
 
 ### ASSUMPTION-006: Shot Count Represents Burst Fire
 
-**ID**: ASSUMPTION-006  
-**Category**: Combat Timing  
-**Confidence**: 85%  
+**ID**: ASSUMPTION-006
+**Category**: Combat Timing
+**Confidence**: 85%
 **Status**: 🔬 Hypothesis (visual observation)
 
 **Description**:
@@ -299,9 +299,9 @@ If false, would need to revise event generation. Moderate impact (affects timing
 
 ### ASSUMPTION-007: Project Scope Excludes Combat Simulation
 
-**ID**: ASSUMPTION-007  
-**Category**: Architecture  
-**Confidence**: 100%  
+**ID**: ASSUMPTION-007
+**Category**: Architecture
+**Confidence**: 100%
 **Status**: ✅ Confirmed (project decision)
 
 **Description**:

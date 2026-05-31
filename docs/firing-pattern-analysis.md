@@ -11,7 +11,7 @@
 
 **This analysis is based on HYPOTHETICAL warmup/cooldown/shots values, NOT actual battle logs.**
 
-**Evidence Level**: Theoretical derivation  
+**Evidence Level**: Theoretical derivation
 **Validation Status**: ❌ Unverified against real combat data
 
 **Limitations**:

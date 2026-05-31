@@ -57,13 +57,14 @@ function displayRoundEvents() {
   if (augur.weapons) {
     for (const weapon of augur.weapons) {
       console.log(`${weapon.name}:`);
+      console.log(`  Type: ${weapon.type}`);
+      console.log(`  Warmup: ${weapon.warmup} rounds`);
+      console.log(`  Cooldown: ${weapon.cooldown} rounds`);
+      console.log(`  Shots: ${weapon.shots} per activation`);
 
-      if (weapon.firingSchedule.type === 'every_round') {
-        console.log(`  Fires every round (${weapon.shotsPerActivation} shots)`);
-      } else if (weapon.firingSchedule.type === 'interval') {
-        console.log(`  Fires every ${weapon.firingSchedule.interval} rounds starting round ${weapon.firingSchedule.startRound}`);
-        console.log(`  (${weapon.shotsPerActivation} shots per activation)`);
-      }
+      // Calculate first firing round
+      const firstRound = 1 + weapon.warmup;
+      console.log(`  → Fires starting round ${firstRound}, then every ${weapon.cooldown} rounds`);
 
       console.log();
     }

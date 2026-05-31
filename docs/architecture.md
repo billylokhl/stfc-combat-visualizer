@@ -71,10 +71,18 @@ Represents an individual weapon system.
 Responsibilities:
 
 - weapon identity
+- weapon type classification
 - damage type
 - average damage
-- timing
+- timing parameters (warmup, cooldown, shots)
 - hardpoint assignment
+
+**Timing Model** (as of Milestone 6):
+- **warmup**: rounds before first fire
+- **cooldown**: rounds between fires
+- **shots**: projectiles per activation
+
+Firing schedules are **derived behavior** computed from warmup/cooldown, not authored data.
 
 ### Combat Event
 Represents a combat action occurring at a specific point in time.
@@ -108,15 +116,21 @@ No animation code.
 ### combat-model
 Contains:
 
-- Firing pattern interpretation
+- Firing pattern derivation from warmup/cooldown/shots
 - Combat timeline generation
 - Combat event generation
+
+**Firing Algorithm** (as of Milestone 6):
+```
+firstRound = 1 + warmup
+weaponFires = (round === firstRound) || ((round - firstRound) % cooldown === 0)
+```
 
 Example:
 
 Input:
 
-- Ship
+- Ship (with weapon warmup/cooldown/shots)
 - Round number
 
 Output:
@@ -126,6 +140,8 @@ Output:
 No UI code.
 
 No animation code.
+
+**Principle**: Combat model derives firing patterns from source data (warmup/cooldown). Manual firing schedules are not authored.
 
 ---
 

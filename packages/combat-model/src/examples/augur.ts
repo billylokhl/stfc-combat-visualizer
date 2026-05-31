@@ -4,10 +4,10 @@
  * This is a reference implementation demonstrating the combat event model
  * using the Augur's firing pattern as an example.
  *
- * Approximate Firing Pattern:
- * - Left Beam: 2 shots every round
- * - Right Beam: 2 shots every round
- * - Obliterator: 1 shot on rounds 2, 5, 8, 11, 14 (every 3 rounds starting round 2)
+ * Firing Pattern (warmup/cooldown/shots):
+ * - Left Beam: warmup=0, cooldown=1, shots=2 → fires rounds 1,2,3,4,5...
+ * - Right Beam: warmup=0, cooldown=1, shots=2 → fires rounds 1,2,3,4,5...
+ * - Obliterator: warmup=1, cooldown=3, shots=1 → fires rounds 2,5,8,11,14...
  */
 
 import type { Ship } from '@stfc-vi/ship-model';
@@ -23,37 +23,35 @@ export const augur: Ship = {
     {
       id: 'left_beam',
       name: 'Left Beam',
+      type: 'beam',
       hardpoint: 'left_beam',
       damageType: 'energy',
       averageDamage: 5000,
-      shotsPerActivation: 2,
-      firingSchedule: {
-        type: 'every_round',
-      },
+      warmup: 0,
+      cooldown: 1,
+      shots: 2,
     },
     {
       id: 'right_beam',
       name: 'Right Beam',
+      type: 'beam',
       hardpoint: 'right_beam',
       damageType: 'energy',
       averageDamage: 5000,
-      shotsPerActivation: 2,
-      firingSchedule: {
-        type: 'every_round',
-      },
+      warmup: 0,
+      cooldown: 1,
+      shots: 2,
     },
     {
       id: 'obliterator',
       name: 'Obliterator',
+      type: 'torpedo',
       hardpoint: 'obliterator',
       damageType: 'energy',
       averageDamage: 15000,
-      shotsPerActivation: 1,
-      firingSchedule: {
-        type: 'interval',
-        startRound: 2,
-        interval: 3,
-      },
+      warmup: 1,
+      cooldown: 3,
+      shots: 1,
     },
   ],
 };

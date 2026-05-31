@@ -49,7 +49,17 @@ export interface Ship {
 }
 
 /**
+ * Weapon type classification
+ */
+export type WeaponType = 'beam' | 'torpedo' | 'kinetic' | 'energy' | 'special';
+
+/**
  * Weapon definition on a ship
+ *
+ * Timing model based on STFC source data (stfc.space):
+ * - warmup: rounds of delay before weapon can first fire
+ * - cooldown: rounds of delay between weapon activations
+ * - shots: number of projectiles fired per activation
  */
 export interface WeaponDefinition {
   /** Weapon identifier */
@@ -58,7 +68,10 @@ export interface WeaponDefinition {
   /** Weapon display name */
   name: string;
 
-  /** Hardpoint assignment (e.g., "primary", "secondary", "tertiary") */
+  /** Weapon type classification */
+  type: WeaponType;
+
+  /** Hardpoint assignment (e.g., "left_beam", "right_beam", "obliterator") */
   hardpoint: string;
 
   /** Damage type (e.g., "kinetic", "energy") */
@@ -67,48 +80,33 @@ export interface WeaponDefinition {
   /** Average damage value */
   averageDamage?: number;
 
-  /** Number of shots fired when this weapon activates */
-  shotsPerActivation: number;
+  /**
+   * Warmup: Number of rounds before weapon can first fire
+   *
+   * Examples:
+   * - warmup = 0: weapon fires starting round 1
+   * - warmup = 1: weapon fires starting round 2
+   * - warmup = 2: weapon fires starting round 3
+   */
+  warmup: number;
 
-  /** Firing schedule defining when this weapon activates */
-  firingSchedule: FiringSchedule;
-}
+  /**
+   * Cooldown: Number of rounds between weapon activations
+   *
+   * Examples:
+   * - cooldown = 1: weapon fires every round
+   * - cooldown = 2: weapon fires every 2 rounds
+   * - cooldown = 3: weapon fires every 3 rounds
+   */
+  cooldown: number;
 
-/**
- * Defines when a weapon fires during combat
- */
-export type FiringSchedule =
-  | EveryRoundSchedule
-  | IntervalSchedule
-  | SpecificRoundsSchedule;
-
-/**
- * Weapon fires every round
- */
-export interface EveryRoundSchedule {
-  type: 'every_round';
-}
-
-/**
- * Weapon fires at regular intervals
- *
- * Example: every 3 rounds starting on round 2
- */
-export interface IntervalSchedule {
-  type: 'interval';
-  /** First round to fire (1-indexed) */
-  startRound: number;
-  /** Number of rounds between activations */
-  interval: number;
-}
-
-/**
- * Weapon fires on specific rounds only
- *
- * Example: rounds [2, 5, 8, 11, 14]
- */
-export interface SpecificRoundsSchedule {
-  type: 'specific_rounds';
-  /** Exact rounds when weapon fires (1-indexed) */
-  rounds: number[];
+  /**
+   * Shots: Number of projectiles fired per activation
+   *
+   * Examples:
+   * - shots = 1: single projectile per activation
+   * - shots = 2: burst of 2 projectiles per activation
+   * - shots = 3: burst of 3 projectiles per activation
+   */
+  shots: number;
 }

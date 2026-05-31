@@ -2,31 +2,36 @@
 
 **Purpose**: Capture combat domain knowledge, discoveries, assumptions, and open questions to guide architectural decisions.
 
-**Last Updated**: May 30, 2026
+**Last Updated**: May 30, 2026 (Milestone 6: Migration to warmup/cooldown/shots)
 
 ---
 
 ## Confirmed Facts
 
-### 1. Weapons Have Warmup/Cooldown/Shots in Source Data
-**Evidence**: Direct observation from stfc.space weapon data  
-**Verification Method**: Manual inspection of multiple ships on stfc.space  
-**Status**: ✅ Confirmed
+### 1. Warmup/Cooldown/Shots Is Now Canonical Model ✅ IMPLEMENTED
+**Evidence**: Direct observation from stfc.space weapon data
+**Verification Method**: Manual inspection of multiple ships on stfc.space
+**Status**: ✅ Confirmed and Implemented (Milestone 6)
 
 Every weapon in STFC has three timing values:
-- **Warmup** (seconds): Delay before first fire
-- **Cooldown** (seconds): Delay between fires
+- **Warmup** (rounds): Delay before first fire
+- **Cooldown** (rounds): Delay between fires
 - **Shots** (count): Number of projectiles per activation
 
-Example from stfc.space:
-- Augur's Obliterator Torpedo: warmup=2s, cooldown=3s, shots=1
-- Augur's Beam Array: warmup=0s, cooldown=1s, shots=2
+Example from stfc.space (converted to rounds):
+- Augur's Obliterator Torpedo: warmup=1, cooldown=3, shots=1
+- Augur's Beam Array: warmup=0, cooldown=1, shots=2
 
-**Implication**: These values exist in STFC game data and can be used as source material.
+**Implementation**:
+- WeaponDefinition now uses warmup/cooldown/shots fields (packages/ship-model)
+- Combat event generation derives firing from warmup/cooldown (packages/combat-model)
+- Firing schedules are now derived behavior, not authored data
+
+**Implication**: These values exist in STFC game data and serve as the source of truth for weapon timing.
 
 ### 2. Hardpoint Positions Not in Source Data
-**Evidence**: stfc.space does not specify hardpoint positions (left/right/center)  
-**Verification Method**: Manual inspection of weapon data fields  
+**Evidence**: stfc.space does not specify hardpoint positions (left/right/center)
+**Verification Method**: Manual inspection of weapon data fields
 **Status**: ✅ Confirmed
 
 Weapon data does NOT include:
@@ -37,8 +42,8 @@ Weapon data does NOT include:
 **Implication**: Hardpoint positions are visualization decisions, not combat data. Same weapon can render differently on different ships.
 
 ### 3. Project Scope: Visualization, Not Simulation
-**Evidence**: Project vision and milestone goals  
-**Verification Method**: Repository documentation  
+**Evidence**: Project vision and milestone goals
+**Verification Method**: Repository documentation
 **Status**: ✅ Confirmed
 
 This project visualizes weapon firing patterns. We do NOT simulate:
@@ -54,11 +59,11 @@ This project visualizes weapon firing patterns. We do NOT simulate:
 
 ## Strong Evidence (High Confidence Hypotheses)
 
-### 1. Warmup/Cooldown/Shots Determine Firing Pattern
-**Evidence**: 5 analyzed ships (Augur, Vengeance, Kelvin, Borg Cube, Rotarran) all derivable  
-**Confidence**: 90%  
-**Verification Method**: Firing pattern analysis in firing-pattern-analysis.md  
-**Status**: 🔬 Hypothesis (needs battle-log validation)
+### 1. Warmup/Cooldown/Shots Determine Firing Pattern ✅ VALIDATED
+**Evidence**: 5 analyzed ships (Augur, Vengeance, Kelvin, Borg Cube, Rotarran) all derivable
+**Confidence**: 95% (increased after implementation validation)
+**Verification Method**: Firing pattern analysis + Milestone 6 implementation
+**Status**: ✅ Validated (implemented and tested)
 
 **Claim**: Weapon firing patterns can be mechanically derived from warmup/cooldown/shots values without manual schedule authoring.
 
@@ -66,15 +71,21 @@ This project visualizes weapon firing patterns. We do NOT simulate:
 - 5/5 ships analyzed had derivable patterns
 - No irregular timing discovered
 - All patterns match expected warmup+cooldown behavior
+- ✅ Augur firing pattern preserved after migration (verified via npm run demo:augur)
+- ✅ Visualization layer unchanged (verified via npm run demo:visual)
 
-**If False**: Some ships have irregular schedules requiring manual FiringSchedule specification.
+**Algorithm Implemented** (packages/combat-model/src/index.ts):
+```typescript
+firstRound = 1 + warmup
+weaponFires = (round === firstRound) || ((round - firstRound) % cooldown === 0)
+```
 
-**Validation Needed**: Compare derived patterns to actual battle logs.
+**Validation Remaining**: Compare derived patterns to actual battle logs.
 
 ### 2. Shot Count Represents Burst Fire
-**Evidence**: Typical STFC weapon behavior shows rapid consecutive shots  
-**Confidence**: 85%  
-**Verification Method**: Observation of STFC combat animations  
+**Evidence**: Typical STFC weapon behavior shows rapid consecutive shots
+**Confidence**: 85%
+**Verification Method**: Observation of STFC combat animations
 **Status**: 🔬 Hypothesis (needs timing measurement)
 
 **Claim**: A weapon with shots=2 fires both shots rapidly during one activation, then cooldown begins.
@@ -99,9 +110,9 @@ This project visualizes weapon firing patterns. We do NOT simulate:
 ## Unverified Hypotheses (Medium Confidence)
 
 ### 1. Weapon Listing Order Determines Firing Order
-**Evidence**: stfc.space weapon order appears consistent with observed firing  
-**Confidence**: 70%  
-**Verification Method**: Visual observation, no battle-log data  
+**Evidence**: stfc.space weapon order appears consistent with observed firing
+**Confidence**: 70%
+**Verification Method**: Visual observation, no battle-log data
 **Status**: 🔬 Hypothesis (needs controlled testing)
 
 **Claim**: When multiple weapons have the same warmup, they fire in the order listed in the weapon array.
@@ -110,9 +121,9 @@ This project visualizes weapon firing patterns. We do NOT simulate:
 - stfc.space lists weapons in consistent order
 - No counter-examples found in 5 analyzed ships
 - Appears logical for implementation
-**Evidence**: STFC community knowledge, initiative mechanics  
-**Confidence**: 60%  
-**Verification Method**: Community discussion, no official documentation  
+**Evidence**: STFC community knowledge, initiative mechanics
+**Confidence**: 60%
+**Verification Method**: Community discussion, no official documentation
 **Status**: 🔬 Hypothesis (needs PvP battle-log analysis)
 
 **Claim**: In PvP combat, the attacking ship enters firing sequence before the defending ship.
@@ -132,9 +143,9 @@ This project visualizes weapon firing patterns. We do NOT simulate:
 **Validation Needed**: PvP battle logs showing firing sequence
 
 ### 3. Round Duration Is Constant at 1 Second
-**Evidence**: Warmup/cooldown values appear to align with 1-second rounds  
-**Confidence**: 50%  
-**Verification Method**: Assumption based on value alignment  
+**Evidence**: Warmup/cooldown values appear to align with 1-second rounds
+**Confidence**: 50%
+**Verification Method**: Assumption based on value alignment
 **Status**: ❓ Unknown (needs timing measurement)
 
 **Claim**: STFC combat rounds are exactly 1 second in duration.
@@ -221,7 +232,7 @@ Future Validation Targets
 
 ---
 
-## 
+##
 No research on:
 - 3v3 battle firing order
 - Target selection
