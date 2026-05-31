@@ -22,7 +22,7 @@ interface Projectile {
 
 /**
  * Canvas Renderer
- * 
+ *
  * Minimal renderer using simple primitives.
  * No images, no fancy effects - just shapes and labels.
  */
@@ -36,15 +36,15 @@ export class CanvasRenderer {
   constructor(canvas: HTMLCanvasElement) {
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Could not get canvas context');
-    
+
     this.ctx = ctx;
     this.width = canvas.width;
     this.height = canvas.height;
-    
+
     // Define hardpoint positions (relative to ship center)
     const centerX = this.width / 2;
     const centerY = this.height / 2;
-    
+
     this.hardpoints = [
       { id: 'left_beam', x: centerX - 60, y: centerY, label: 'L' },
       { id: 'right_beam', x: centerX + 60, y: centerY, label: 'R' },
@@ -89,7 +89,7 @@ export class CanvasRenderer {
   renderHardpoints(activeHardpoints: Set<string>): void {
     for (const hp of this.hardpoints) {
       const isActive = activeHardpoints.has(hp.id);
-      
+
       // Hardpoint circle
       this.ctx.fillStyle = isActive ? '#ffaa00' : '#555';
       this.ctx.strokeStyle = isActive ? '#ffff00' : '#777';
@@ -121,7 +121,7 @@ export class CanvasRenderer {
     gradient.addColorStop(0, `rgba(255, 255, 200, ${intensity})`);
     gradient.addColorStop(0.5, `rgba(255, 200, 0, ${intensity * 0.5})`);
     gradient.addColorStop(1, 'rgba(255, 100, 0, 0)');
-    
+
     this.ctx.fillStyle = gradient;
     this.ctx.beginPath();
     this.ctx.arc(hp.x, hp.y, radius, 0, Math.PI * 2);
@@ -250,7 +250,7 @@ export class CanvasRenderer {
   render(round: number, roundTime: number, activeEvents: VisualEvent[]): void {
     this.clear();
     this.renderShip();
-    
+
     // Determine active hardpoints
     const activeHardpoints = new Set<string>();
     for (const event of activeEvents) {
@@ -258,7 +258,7 @@ export class CanvasRenderer {
         activeHardpoints.add(event.hardpoint);
       }
     }
-    
+
     this.renderHardpoints(activeHardpoints);
     this.renderEvents(activeEvents, roundTime);
     this.renderProjectiles(roundTime);
@@ -282,11 +282,11 @@ export class CanvasRenderer {
   resize(width: number, height: number): void {
     this.width = width;
     this.height = height;
-    
+
     // Recalculate hardpoint positions
     const centerX = width / 2;
     const centerY = height / 2;
-    
+
     this.hardpoints = [
       { id: 'left_beam', x: centerX - 60, y: centerY, label: 'L' },
       { id: 'right_beam', x: centerX + 60, y: centerY, label: 'R' },

@@ -83,7 +83,7 @@ export default function App() {
             onTimeUpdate={setCurrentTime}
             onRoundUpdate={setCurrentRound}
           />
-          
+
           <PlaybackControls
             isPlaying={isPlaying}
             playbackSpeed={playbackSpeed}

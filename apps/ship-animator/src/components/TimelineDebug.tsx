@@ -12,7 +12,7 @@ export default function TimelineDebug({
   currentRound,
 }: TimelineDebugProps) {
   const currentTimeline = timelines.find(t => t.round === currentRound);
-  
+
   if (!currentTimeline) {
     return (
       <div style={{
@@ -91,7 +91,7 @@ export default function TimelineDebug({
         }}>
           Active Events ({activeEvents.length})
         </h3>
-        
+
         {activeEvents.length === 0 ? (
           <p style={{ fontSize: '11px', color: '#666' }}>None</p>
         ) : (
@@ -135,7 +135,7 @@ export default function TimelineDebug({
         }}>
           Upcoming Events ({upcomingEvents.length})
         </h3>
-        
+
         {upcomingEvents.length === 0 ? (
           <p style={{ fontSize: '11px', color: '#666' }}>None</p>
         ) : (
@@ -184,7 +184,7 @@ export default function TimelineDebug({
         }}>
           All Round Events
         </h3>
-        
+
         <div style={{
           fontSize: '10px',
           fontFamily: 'monospace',

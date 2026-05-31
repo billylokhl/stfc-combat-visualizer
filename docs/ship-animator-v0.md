@@ -4,9 +4,9 @@
 
 Ship Animator v0 is the **proof-of-concept frontend application** that validates the complete architecture by implementing a minimal end-to-end ship visualization system. This milestone demonstrates that the layered architecture (domain → visualization → rendering) works in practice with real browser-based animation.
 
-**Status**: ✅ Complete  
-**Architecture Validation**: Successful  
-**Technology Stack**: React 18 + Vite + Canvas 2D  
+**Status**: ✅ Complete
+**Architecture Validation**: Successful
+**Technology Stack**: React 18 + Vite + Canvas 2D
 **Demo Ship**: Augur (15 combat rounds)
 
 ---
@@ -196,7 +196,7 @@ TimelineDebug re-renders with new state
 // ShipCanvas.tsx
 const animate = () => {
   const state = engine.getCurrentState();
-  
+
   // Update parent
   onTimeUpdate(state.roundTime);
   onRoundUpdate(state.round);
@@ -216,29 +216,29 @@ const animate = () => {
 render(round: number, roundTime: number, activeEvents: VisualEvent[]) {
   // 1. Clear canvas
   this.clear();
-  
+
   // 2. Draw ship body
   this.renderShip();
-  
+
   // 3. Draw hardpoints (highlight active ones)
   const activeHardpoints = new Set(activeEvents.map(e => e.hardpoint));
   this.renderHardpoints(activeHardpoints);
-  
+
   // 4. Draw visual effects
   for (const event of activeEvents) {
     const age = roundTime - event.timestamp;
     const intensity = 1 - age / 100; // Fade over 100ms
-    
+
     switch (event.type) {
       case 'muzzle_flash': this.renderMuzzleFlash(...);
       case 'recoil': this.renderRecoil(...);
       case 'projectile_launch': this.launchProjectile(...);
     }
   }
-  
+
   // 5. Draw projectiles (managed separately)
   this.renderProjectiles(roundTime);
-  
+
   // 6. Draw round indicator
   this.renderRoundIndicator(round);
 }

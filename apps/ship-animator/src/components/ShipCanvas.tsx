@@ -81,7 +81,7 @@ export default function ShipCanvas({
 
     const animate = () => {
       const state = engine.getCurrentState();
-      
+
       // Update parent component
       onTimeUpdate(state.roundTime);
       onRoundUpdate(state.round);

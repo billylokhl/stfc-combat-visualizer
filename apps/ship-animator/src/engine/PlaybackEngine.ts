@@ -6,20 +6,20 @@ import type { VisualRoundTimeline, VisualEvent } from '@stfc-vi/visualization-mo
 export interface ActiveEvents {
   /** Current round number */
   round: number;
-  
+
   /** Elapsed time in current round (ms) */
   roundTime: number;
-  
+
   /** Events active at this moment */
   active: VisualEvent[];
-  
+
   /** Upcoming events in next 500ms */
   upcoming: VisualEvent[];
 }
 
 /**
  * Playback Engine
- * 
+ *
  * Manages wall-clock-based playback of visual timelines.
  * Uses performance.now() for precise timing.
  */
@@ -41,9 +41,9 @@ export class PlaybackEngine {
    */
   play(): void {
     if (!this.isPaused) return;
-    
+
     this.isPaused = false;
-    
+
     if (this.pausedTime > 0) {
       // Resume from paused position
       this.startTime = performance.now() - this.pausedTime;
@@ -60,7 +60,7 @@ export class PlaybackEngine {
    */
   pause(): void {
     if (this.isPaused) return;
-    
+
     this.isPaused = true;
     this.pausedTime = performance.now() - this.startTime;
   }
@@ -81,7 +81,7 @@ export class PlaybackEngine {
    */
   setSpeed(speed: number): void {
     const wasPlaying = !this.isPaused;
-    
+
     if (wasPlaying) {
       // Pause, adjust time, resume
       const currentElapsed = this.getElapsedTime();
@@ -118,21 +118,21 @@ export class PlaybackEngine {
     }
 
     const elapsed = this.getElapsedTime();
-    
+
     // Find current round
     let accumulatedTime = 0;
     let roundIndex = 0;
-    
+
     for (let i = 0; i < this.timelines.length; i++) {
       const roundDuration = this.timelines[i].duration;
-      
+
       if (elapsed < accumulatedTime + roundDuration) {
         roundIndex = i;
         break;
       }
-      
+
       accumulatedTime += roundDuration;
-      
+
       // If we've passed all rounds, stay at last round
       if (i === this.timelines.length - 1) {
         roundIndex = i;
@@ -144,7 +144,7 @@ export class PlaybackEngine {
     for (let i = 0; i < roundIndex; i++) {
       roundStartAccumulated += this.timelines[i].duration;
     }
-    
+
     const roundTime = elapsed - roundStartAccumulated;
     const currentTimeline = this.timelines[roundIndex];
 
@@ -190,10 +190,10 @@ export class PlaybackEngine {
    */
   isComplete(): boolean {
     if (this.timelines.length === 0) return true;
-    
+
     const elapsed = this.getElapsedTime();
     const totalDuration = this.timelines.reduce((sum, t) => sum + t.duration, 0);
-    
+
     return elapsed >= totalDuration;
   }
 }
