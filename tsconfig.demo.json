@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "@stfc-vi/ship-model": ["packages/ship-model/src"],
+      "@stfc-vi/ship-model/*": ["packages/ship-model/src/*"],
+      "@stfc-vi/combat-model": ["packages/combat-model/src"],
+      "@stfc-vi/combat-model/*": ["packages/combat-model/src/*"],
+      "@stfc-vi/asset-library": ["packages/asset-library/src"],
+      "@stfc-vi/asset-library/*": ["packages/asset-library/src/*"]
+    }
+  },
+  "include": ["demos/**/*", "packages/**/*"],
+  "ts-node": {
+    "require": ["tsconfig-paths/register"]
+  }
+}

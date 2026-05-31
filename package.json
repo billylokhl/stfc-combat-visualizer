@@ -9,10 +9,14 @@
   ],
   "scripts": {
     "build": "echo 'Build script placeholder'",
-    "test": "echo 'Test script placeholder'"
+    "test": "echo 'Test script placeholder'",
+    "demo:augur": "ts-node --project tsconfig.demo.json demos/augur-firing-pattern.ts"
   },
   "devDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "ts-node": "^10.9.0",
+    "@types/node": "^20.0.0",
+    "tsconfig-paths": "^4.2.0"
   },
   "engines": {
     "node": ">=18.0.0"

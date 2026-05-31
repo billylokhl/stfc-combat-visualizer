@@ -67,29 +67,48 @@ export interface WeaponDefinition {
   /** Average damage value */
   averageDamage?: number;
 
-  /** Weapon timing information */
-  timing?: {
-    /** Cooldown in seconds */
-    cooldown?: number;
+  /** Number of shots fired when this weapon activates */
+  shotsPerActivation: number;
 
-    /** Initial delay before first firing */
-    initialDelay?: number;
-  };
+  /** Firing schedule defining when this weapon activates */
+  firingSchedule: FiringSchedule;
 }
 
 /**
- * Firing pattern definition
+ * Defines when a weapon fires during combat
  */
-export interface FiringPattern {
-  /** Pattern identifier */
-  id: string;
+export type FiringSchedule =
+  | EveryRoundSchedule
+  | IntervalSchedule
+  | SpecificRoundsSchedule;
 
-  /** Pattern name/description */
-  name: string;
+/**
+ * Weapon fires every round
+ */
+export interface EveryRoundSchedule {
+  type: 'every_round';
+}
 
-  /** Weapon IDs involved in this pattern */
-  weaponIds: string[];
+/**
+ * Weapon fires at regular intervals
+ *
+ * Example: every 3 rounds starting on round 2
+ */
+export interface IntervalSchedule {
+  type: 'interval';
+  /** First round to fire (1-indexed) */
+  startRound: number;
+  /** Number of rounds between activations */
+  interval: number;
+}
 
-  /** Pattern timing and sequence information */
-  sequence?: unknown;
+/**
+ * Weapon fires on specific rounds only
+ *
+ * Example: rounds [2, 5, 8, 11, 14]
+ */
+export interface SpecificRoundsSchedule {
+  type: 'specific_rounds';
+  /** Exact rounds when weapon fires (1-indexed) */
+  rounds: number[];
 }
