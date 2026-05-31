@@ -495,3 +495,56 @@ export function transformTwoShipCombatToVisual(
     [defender.id]: defenderTimelines,
   };
 }
+
+/**
+ * Role-keyed two-ship visual timelines.
+ *
+ * This avoids shipId key collisions for same-ship matchups such as Augur vs Augur.
+ */
+export interface TwoShipVisualTimelines {
+  attacker: VisualRoundTimeline[];
+  defender: VisualRoundTimeline[];
+}
+
+/**
+ * Transform two-ship combat rounds into role-keyed visual timelines.
+ *
+ * This preserves combat-model ordering and only routes role-tagged events to the
+ * correct ship visual transformer.
+ */
+export function transformTwoShipCombatToRoleVisual(
+  rounds: RoundEvents[],
+  attacker: Ship,
+  attackerVisual: ShipVisualDefinition | HardpointDefinition[],
+  defender: Ship,
+  defenderVisual: ShipVisualDefinition | HardpointDefinition[],
+  config: VisualTimingConfig = DEFAULT_TIMING
+): TwoShipVisualTimelines {
+  const attackerTimelines: VisualRoundTimeline[] = [];
+  const defenderTimelines: VisualRoundTimeline[] = [];
+
+  for (const round of rounds) {
+    const attackerRound: RoundEvents = {
+      round: round.round,
+      events: round.events.filter((event) => event.role === 'attacker' || !event.role),
+    };
+
+    const defenderRound: RoundEvents = {
+      round: round.round,
+      events: round.events.filter((event) => event.role === 'defender' || !event.role),
+    };
+
+    attackerTimelines.push(
+      transformRoundToVisual(attackerRound, attacker, attackerVisual, config)
+    );
+
+    defenderTimelines.push(
+      transformRoundToVisual(defenderRound, defender, defenderVisual, config)
+    );
+  }
+
+  return {
+    attacker: attackerTimelines,
+    defender: defenderTimelines,
+  };
+}

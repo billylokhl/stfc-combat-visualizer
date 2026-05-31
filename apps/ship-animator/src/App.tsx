@@ -1,192 +1,191 @@
-import { useState, useEffect } from 'react';
-import { generateCombatEvents, generateTwoShipCombat } from '@stfc-vi/combat-model';
-import { transformCombatToVisual, transformTwoShipCombatToVisual, DEFAULT_TIMING, type VisualRoundTimeline } from '@stfc-vi/visualization-model';
+import { useEffect, useState } from 'react';
+import { generateTwoShipCombat } from '@stfc-vi/combat-model';
+import {
+  DEFAULT_TIMING,
+  transformTwoShipCombatToRoleVisual,
+  type TwoShipVisualTimelines,
+  type VisualRoundTimeline,
+} from '@stfc-vi/visualization-model';
 import { listShips, getShipById, type ShipCatalogEntry } from '@stfc-vi/visualization-model/examples';
-import ShipCanvas from './components/ShipCanvas';
+import CombatCanvas from './components/CombatCanvas';
 import PlaybackControls from './components/PlaybackControls';
 import TimelineDebug from './components/TimelineDebug';
 import ShipSelector from './components/ShipSelector';
 import ShipMetadataPanel from './components/ShipMetadataPanel';
 
 const ALL_SHIPS = listShips();
-const DEFAULT_SHIP_ID = 'augur';
+const DEFAULT_ATTACKER_ID = 'augur';
 const DEFAULT_DEFENDER_ID = 'vengeance';
+const TOTAL_ROUNDS = 15;
 
-function buildTimelines(entry: ShipCatalogEntry): VisualRoundTimeline[] {
-  const ship = entry.ship as any;
-  const visualDef = entry.visual;
-  if (!ship || !visualDef) return [];
-  const combatEvents = generateCombatEvents(ship, 1, 15);
-  return transformCombatToVisual(combatEvents, ship, visualDef, DEFAULT_TIMING);
-}
+const EMPTY_TWO_SHIP_TIMELINES: TwoShipVisualTimelines = {
+  attacker: [],
+  defender: [],
+};
 
-function buildTwoShipTimelines(attackerEntry: ShipCatalogEntry, defenderEntry: ShipCatalogEntry) {
-  const attacker = attackerEntry.ship as any;
-  const defender = defenderEntry.ship as any;
+function buildTwoShipTimelines(
+  attackerEntry: ShipCatalogEntry,
+  defenderEntry: ShipCatalogEntry
+): TwoShipVisualTimelines {
+  const attacker = attackerEntry.ship;
+  const defender = defenderEntry.ship;
   const attackerVisual = attackerEntry.visual;
   const defenderVisual = defenderEntry.visual;
 
-  if (!attacker || !defender || !attackerVisual || !defenderVisual) return {};
+  if (!attacker || !defender || !attackerVisual || !defenderVisual) {
+    return EMPTY_TWO_SHIP_TIMELINES;
+  }
 
-  const rounds = generateTwoShipCombat(attacker, defender, 15);
-  return transformTwoShipCombatToVisual(rounds, attacker, attackerVisual, defender, defenderVisual, DEFAULT_TIMING);
+  const rounds = generateTwoShipCombat(attacker, defender, TOTAL_ROUNDS);
+  return transformTwoShipCombatToRoleVisual(
+    rounds,
+    attacker,
+    attackerVisual,
+    defender,
+    defenderVisual,
+    DEFAULT_TIMING
+  );
+}
+
+function getTotalRounds(timelines: TwoShipVisualTimelines): number {
+  return Math.max(timelines.attacker.length, timelines.defender.length);
+}
+
+function buildAttackerDebugTimelines(
+  timelines: TwoShipVisualTimelines
+): VisualRoundTimeline[] {
+  return timelines.attacker;
 }
 
 export default function App() {
-  const [selectedId, setSelectedId] = useState(DEFAULT_SHIP_ID);
+  const [attackerId, setAttackerId] = useState(DEFAULT_ATTACKER_ID);
   const [defenderId, setDefenderId] = useState(DEFAULT_DEFENDER_ID);
-  const [selectedEntry, setSelectedEntry] = useState<ShipCatalogEntry>(() => getShipById(DEFAULT_SHIP_ID)!);
+  const [attackerEntry, setAttackerEntry] = useState<ShipCatalogEntry>(() => getShipById(DEFAULT_ATTACKER_ID)!);
   const [defenderEntry, setDefenderEntry] = useState<ShipCatalogEntry>(() => getShipById(DEFAULT_DEFENDER_ID)!);
-  const [timelines, setTimelines] = useState<VisualRoundTimeline[]>(() => buildTimelines(getShipById(DEFAULT_SHIP_ID)!));
-  const [twoShipTimelines, setTwoShipTimelines] = useState<{ [shipId: string]: VisualRoundTimeline[] }>(() => buildTwoShipTimelines(getShipById(DEFAULT_SHIP_ID)!, getShipById(DEFAULT_DEFENDER_ID)!));
+  const [timelines, setTimelines] = useState<TwoShipVisualTimelines>(() =>
+    buildTwoShipTimelines(getShipById(DEFAULT_ATTACKER_ID)!, getShipById(DEFAULT_DEFENDER_ID)!)
+  );
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [currentTime, setCurrentTime] = useState(0);
   const [currentRound, setCurrentRound] = useState(1);
+  const [resetKey, setResetKey] = useState(0);
 
-  // Rebuild timelines when ship selection changes
   useEffect(() => {
-    const entry = getShipById(selectedId);
-    if (!entry) return;
-    setSelectedEntry(entry);
-    setTimelines(buildTimelines(entry));
+    const nextAttacker = getShipById(attackerId);
+    const nextDefender = getShipById(defenderId);
+    if (!nextAttacker || !nextDefender) return;
+
+    setAttackerEntry(nextAttacker);
+    setDefenderEntry(nextDefender);
+    setTimelines(buildTwoShipTimelines(nextAttacker, nextDefender));
     setIsPlaying(false);
     setCurrentTime(0);
     setCurrentRound(1);
-  }, [selectedId]);
+    setResetKey((key) => key + 1);
+  }, [attackerId, defenderId]);
 
-  // Rebuild defender when selection changes
-  useEffect(() => {
-    const entry = getShipById(defenderId);
-    if (!entry) return;
-    setDefenderEntry(entry);
-    setTwoShipTimelines(buildTwoShipTimelines(getShipById(selectedId)!, entry));
-    setIsPlaying(false);
-    setCurrentTime(0);
-    setCurrentRound(1);
-  }, [defenderId]);
-
-  // Rebuild two-ship timelines when attacker changes
-  useEffect(() => {
-    setTwoShipTimelines(buildTwoShipTimelines(getShipById(selectedId)!, getShipById(defenderId)!));
-  }, [selectedId]);
-
-  const handlePlayPause = () => setIsPlaying((p) => !p);
+  const handlePlayPause = () => setIsPlaying((playing) => !playing);
 
   const handleRestart = () => {
     setIsPlaying(false);
     setCurrentTime(0);
     setCurrentRound(1);
+    setResetKey((key) => key + 1);
   };
 
-  const attackerHasVisualization = !!selectedEntry.ship && !!selectedEntry.visual;
+  const attackerHasVisualization = !!attackerEntry.ship && !!attackerEntry.visual;
   const defenderHasVisualization = !!defenderEntry.ship && !!defenderEntry.visual;
+  const canRenderScene = attackerHasVisualization && defenderHasVisualization;
+  const totalRounds = getTotalRounds(timelines);
 
   return (
     <div style={{
-          <>
-            <div style={{ display: 'flex', gap: '12px', padding: '12px' }}>
-              <div style={{ flex: 1, border: '1px solid #222' }}>
-                {attackerHasVisualization ? (
-                  <ShipCanvas
-                    timelines={twoShipTimelines[selectedEntry.ship!.id] || timelines}
-                    visualDefinition={selectedEntry.visual!}
-                    isPlaying={isPlaying}
-                    playbackSpeed={playbackSpeed}
-                    currentTime={currentTime}
-                    currentRound={currentRound}
-                    onTimeUpdate={setCurrentTime}
-                    onRoundUpdate={setCurrentRound}
-                  />
-                ) : (
-                  <div style={{ padding: '24px', color: '#666' }}>
-                    Visualization configuration is incomplete for the Attacker.
-                  </div>
-                )}
-              </div>
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100vh',
+      width: '100vw',
+    }}>
+      <div style={{
+        padding: '12px 16px',
+        background: '#2a2a2a',
+        borderBottom: '1px solid #444',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '24px',
+        flexWrap: 'wrap',
+      }}>
+        <h1 style={{ fontSize: '18px', fontWeight: 'normal', margin: 0 }}>
+          Ship Animator — Engineering Prototype
+        </h1>
+      </div>
 
-              <div style={{ flex: 1, border: '1px solid #222' }}>
-                {defenderHasVisualization ? (
-                  <ShipCanvas
-                    timelines={twoShipTimelines[defenderEntry.ship!.id] || timelines}
-                    visualDefinition={defenderEntry.visual!}
-                    isPlaying={isPlaying}
-                    playbackSpeed={playbackSpeed}
-                    currentTime={currentTime}
-                    currentRound={currentRound}
-                    onTimeUpdate={setCurrentTime}
-                    onRoundUpdate={setCurrentRound}
-                  />
-                ) : (
-                  <div style={{ padding: '24px', color: '#666' }}>
-                    Visualization configuration is incomplete for the Defender.
-                  </div>
-                )}
-              </div>
+      <ShipMetadataPanel entry={attackerEntry} />
+
+      <div style={{
+        display: 'flex',
+        flex: 1,
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          background: '#0a0a0a',
+        }}>
+          <div style={{ display: 'flex', gap: '12px', padding: '8px 12px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <div style={{ fontSize: '12px', color: '#ccc' }}>Attacker</div>
+              <ShipSelector ships={ALL_SHIPS} selectedId={attackerId} onSelect={setAttackerId} />
             </div>
-            <PlaybackControls
-              isPlaying={isPlaying}
-              playbackSpeed={playbackSpeed}
-              currentRound={currentRound}
-              totalRounds={timelines.length}
-              onPlayPause={handlePlayPause}
-              onRestart={handleRestart}
-              onSpeedChange={setPlaybackSpeed}
-            />
-          </>
-                    visualDefinition={selectedEntry.visual!}
-                    isPlaying={isPlaying}
-                    playbackSpeed={playbackSpeed}
-                    currentTime={currentTime}
-                    currentRound={currentRound}
-                    onTimeUpdate={setCurrentTime}
-                    onRoundUpdate={setCurrentRound}
-                  />
-                </div>
 
-                <div style={{ flex: 1, border: '1px solid #222' }}>
-                  <ShipCanvas
-                    timelines={twoShipTimelines[defenderEntry.ship!.id] || timelines}
-                    visualDefinition={defenderEntry.visual!}
-                    isPlaying={isPlaying}
-                    playbackSpeed={playbackSpeed}
-                    currentTime={currentTime}
-                    currentRound={currentRound}
-                    onTimeUpdate={setCurrentTime}
-                    onRoundUpdate={setCurrentRound}
-                  />
-                </div>
-              </div>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <div style={{ fontSize: '12px', color: '#ccc' }}>Defender</div>
+              <ShipSelector ships={ALL_SHIPS} selectedId={defenderId} onSelect={setDefenderId} />
+            </div>
+          </div>
 
-              <PlaybackControls
+          <div style={{ flex: 1, minHeight: 0, borderTop: '1px solid #222' }}>
+            {canRenderScene ? (
+              <CombatCanvas
+                timelines={timelines}
+                attackerVisualDefinition={attackerEntry.visual!}
+                defenderVisualDefinition={defenderEntry.visual!}
                 isPlaying={isPlaying}
                 playbackSpeed={playbackSpeed}
-                currentRound={currentRound}
-                totalRounds={timelines.length}
-                onPlayPause={handlePlayPause}
-                onRestart={handleRestart}
-                onSpeedChange={setPlaybackSpeed}
+                resetKey={resetKey}
+                onTimeUpdate={setCurrentTime}
+                onRoundUpdate={setCurrentRound}
               />
-            </>
-          ) : (
-            <div style={{
-              flex: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#666',
-              fontSize: '14px',
-              padding: '32px',
-              textAlign: 'center',
-            }}>
-              Visualization configuration is incomplete for this ship.
-            </div>
-          )}
+            ) : (
+              <div style={{ display: 'flex', height: '100%' }}>
+                <div style={{ flex: 1, padding: '24px', color: '#666' }}>
+                  {attackerHasVisualization
+                    ? 'Attacker visualization is available.'
+                    : 'Visualization configuration is incomplete for the Attacker.'}
+                </div>
+                <div style={{ flex: 1, padding: '24px', color: '#666' }}>
+                  {defenderHasVisualization
+                    ? 'Defender visualization is available.'
+                    : 'Visualization configuration is incomplete for the Defender.'}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <PlaybackControls
+            isPlaying={isPlaying}
+            playbackSpeed={playbackSpeed}
+            currentRound={currentRound}
+            totalRounds={totalRounds}
+            onPlayPause={handlePlayPause}
+            onRestart={handleRestart}
+            onSpeedChange={setPlaybackSpeed}
+          />
         </div>
 
-        {/* Debug panel */}
         <TimelineDebug
-          timelines={timelines}
+          timelines={buildAttackerDebugTimelines(timelines)}
           currentTime={currentTime}
           currentRound={currentRound}
         />
