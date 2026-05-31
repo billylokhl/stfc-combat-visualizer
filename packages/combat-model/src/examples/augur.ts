@@ -5,9 +5,13 @@
  * using the Augur's firing pattern as an example.
  *
  * Firing Pattern (warmup/cooldown/shots):
- * - Left Beam: warmup=0, cooldown=1, shots=2 → fires rounds 1,2,3,4,5...
- * - Right Beam: warmup=0, cooldown=1, shots=2 → fires rounds 1,2,3,4,5...
- * - Obliterator: warmup=1, cooldown=3, shots=1 → fires rounds 2,5,8,11,14...
+ * - Left Beam: warmup=1, cooldown=1, shots=2 → fires rounds 1,2,3,4,5...
+ * - Right Beam: warmup=1, cooldown=1, shots=2 → fires rounds 1,2,3,4,5...
+ * - Obliterator: warmup=2, cooldown=3, shots=1 → fires rounds 2,5,8,11,14...
+ *
+ * Warmup Semantics:
+ * - warmup=1 means first activation in round 1 (not 1 round of delay)
+ * - warmup=2 means first activation in round 2
  */
 
 import type { Ship } from '@stfc-vi/ship-model';
@@ -27,8 +31,8 @@ export const augur: Ship = {
       hardpoint: 'left_beam',
       damageType: 'energy',
       averageDamage: 5000,
-      warmup: 0,
-      cooldown: 1,
+      warmup: 1,  // fires starting round 1
+      cooldown: 1, // fires every round
       shots: 2,
     },
     {
@@ -38,8 +42,8 @@ export const augur: Ship = {
       hardpoint: 'right_beam',
       damageType: 'energy',
       averageDamage: 5000,
-      warmup: 0,
-      cooldown: 1,
+      warmup: 1,  // fires starting round 1
+      cooldown: 1, // fires every round
       shots: 2,
     },
     {
@@ -49,8 +53,8 @@ export const augur: Ship = {
       hardpoint: 'obliterator',
       damageType: 'energy',
       averageDamage: 15000,
-      warmup: 1,
-      cooldown: 3,
+      warmup: 2,  // fires starting round 2
+      cooldown: 3, // fires every 3 rounds after first
       shots: 1,
     },
   ],

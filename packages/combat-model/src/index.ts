@@ -44,16 +44,22 @@ export interface RoundEvents {
  * Determine if a weapon fires on a specific round based on warmup/cooldown timing
  *
  * Algorithm:
- * 1. First firing round = 1 + warmup
+ * 1. First firing round = warmup (warmup is the round number, not a delay)
  * 2. Weapon fires if: round == firstRound OR (round - firstRound) % cooldown == 0
  *
+ * Warmup Semantics:
+ * - warmup=1 → first activation in round 1
+ * - warmup=2 → first activation in round 2
+ * - warmup=3 → first activation in round 3
+ *
  * Examples:
- * - warmup=0, cooldown=1: fires rounds 1,2,3,4,5... (every round)
- * - warmup=1, cooldown=3: fires rounds 2,5,8,11,14... (every 3 rounds starting round 2)
- * - warmup=2, cooldown=2: fires rounds 3,5,7,9,11... (every 2 rounds starting round 3)
+ * - warmup=1, cooldown=1: fires rounds 1,2,3,4,5... (every round)
+ * - warmup=2, cooldown=3: fires rounds 2,5,8,11,14... (every 3 rounds starting round 2)
+ * - warmup=3, cooldown=2: fires rounds 3,5,7,9,11... (every 2 rounds starting round 3)
  */
 export function weaponFiresOnRound(weapon: WeaponDefinition, round: number): boolean {
-  const firstRound = 1 + weapon.warmup;
+  // warmup is the round number when weapon first fires (with fallback to round 1)
+  const firstRound = weapon.warmup || 1;
 
   if (round < firstRound) {
     return false;
