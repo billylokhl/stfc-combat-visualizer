@@ -119,6 +119,7 @@ export default function CombatCanvas({
   useEffect(() => {
     if (!engineRef.current) return;
     engineRef.current.restart();
+    rendererRef.current?.clearProjectileState();
   }, [resetKey]);
 
   useEffect(() => {
