@@ -64,6 +64,10 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 }
 
 export default function ShipMetadataPanel({ entry }: ShipMetadataPanelProps) {
+  const weaponCount = entry.ship?.weapons?.length ?? 0;
+  const hardpointCount = entry.visual?.hardpoints?.length ?? 0;
+  const coverageIncomplete = weaponCount > 0 && hardpointCount < weaponCount;
+
   return (
     <div style={{
       padding: '12px 16px',
@@ -91,6 +95,29 @@ export default function ShipMetadataPanel({ entry }: ShipMetadataPanelProps) {
           />
         </Row>
       </div>
+
+      {weaponCount > 0 && (
+        <Row label="Visual Coverage">
+          <span style={{ color: coverageIncomplete ? '#ff9800' : '#4caf50' }}>
+            {hardpointCount} / {weaponCount} weapons mapped
+          </span>
+        </Row>
+      )}
+
+      {coverageIncomplete && (
+        <div style={{
+          marginBottom: '10px',
+          padding: '8px 10px',
+          background: '#ff980018',
+          border: '1px solid #ff980055',
+          borderRadius: '3px',
+          fontSize: '11px',
+          color: '#ff9800',
+          lineHeight: '1.5',
+        }}>
+          Visualization configuration is incomplete. Only {hardpointCount} of {weaponCount} weapons are currently mapped to hardpoints.
+        </div>
+      )}
 
       {entry.notes && (
         <Row label="Notes">

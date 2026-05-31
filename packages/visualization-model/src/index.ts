@@ -449,3 +449,49 @@ export function transformCombatToVisual(
     transformRoundToVisual(round, ship, visualDefinitionOrHardpoints, config)
   );
 }
+
+/**
+ * Transform two-ship combat rounds into per-ship visual timelines.
+ *
+ * This function does not alter combat sequencing — it simply routes events
+ * belonging to each ship to that ship's visual transformer. It returns an
+ * object mapping shipId -> VisualRoundTimeline[] so renderers can consume
+ * timelines independently for attacker and defender.
+ */
+export function transformTwoShipCombatToVisual(
+  rounds: RoundEvents[],
+  attacker: Ship,
+  attackerVisual: ShipVisualDefinition | HardpointDefinition[],
+  defender: Ship,
+  defenderVisual: ShipVisualDefinition | HardpointDefinition[],
+  config: VisualTimingConfig = DEFAULT_TIMING
+): { [shipId: string]: VisualRoundTimeline[] } {
+  const attackerTimelines: VisualRoundTimeline[] = [];
+  const defenderTimelines: VisualRoundTimeline[] = [];
+
+  for (const round of rounds) {
+    // Filter events for each ship and build a RoundEvents object
+    const attackerRound: RoundEvents = {
+      round: round.round,
+      events: round.events.filter((e) => e.shipId === attacker.id || !e.shipId),
+    };
+
+    const defenderRound: RoundEvents = {
+      round: round.round,
+      events: round.events.filter((e) => e.shipId === defender.id || !e.shipId),
+    };
+
+    attackerTimelines.push(
+      transformRoundToVisual(attackerRound, attacker, attackerVisual, config)
+    );
+
+    defenderTimelines.push(
+      transformRoundToVisual(defenderRound, defender, defenderVisual, config)
+    );
+  }
+
+  return {
+    [attacker.id]: attackerTimelines,
+    [defender.id]: defenderTimelines,
+  };
+}

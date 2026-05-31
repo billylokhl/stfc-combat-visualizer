@@ -71,7 +71,7 @@ export default function TimelineDebug({
         borderBottom: '1px solid #444',
       }}>
         <h2 style={{ fontSize: '14px', marginBottom: '8px', color: '#fff' }}>
-          Timeline Debug
+          Attacker Timeline Debug
         </h2>
         <div style={{ fontSize: '11px', color: '#888', fontFamily: 'monospace' }}>
           <div>Round: {currentRound}</div>
