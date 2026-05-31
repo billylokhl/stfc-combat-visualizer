@@ -22,18 +22,18 @@ There is no Idle state. A weapon is always either charging or firing.
 Every weapon has three timing parameters from STFC game data (stfc.space):
 
 ### Warmup
-**Type**: Positive integer (rounds)  
+**Type**: Positive integer (rounds)
 **Semantics**: The round number when the weapon first activates
 
 **Examples**:
 - `warmup=1` → weapon first fires in round 1
-- `warmup=2` → weapon first fires in round 2  
+- `warmup=2` → weapon first fires in round 2
 - `warmup=3` → weapon first fires in round 3
 
 **Visual State**: Before warmup round completes, weapon is **charging**.
 
 ### Cooldown
-**Type**: Positive integer (rounds)  
+**Type**: Positive integer (rounds)
 **Semantics**: Number of rounds between weapon activations
 
 **Examples**:
@@ -44,7 +44,7 @@ Every weapon has three timing parameters from STFC game data (stfc.space):
 **Visual State**: Between activations, weapon is **charging**.
 
 ### Shots
-**Type**: Positive integer  
+**Type**: Positive integer
 **Semantics**: Number of projectiles fired per activation
 
 **Examples**:
@@ -59,8 +59,8 @@ Every weapon has three timing parameters from STFC game data (stfc.space):
 ## Lifecycle States
 
 ### Charging State
-**Duration**: Variable (depends on warmup and cooldown)  
-**Behavior**: Weapon is preparing to fire  
+**Duration**: Variable (depends on warmup and cooldown)
+**Behavior**: Weapon is preparing to fire
 **Visual Representation**: Static or subtle animation (not yet implemented)
 
 **When Charging**:
@@ -70,8 +70,8 @@ Every weapon has three timing parameters from STFC game data (stfc.space):
 **Transition**: Charging → Firing when activation round arrives
 
 ### Firing State
-**Duration**: Brief (all shots fire within same round)  
-**Behavior**: Weapon fires `shots` projectiles in rapid succession  
+**Duration**: Brief (all shots fire within same round)
+**Behavior**: Weapon fires `shots` projectiles in rapid succession
 **Visual Representation**: Muzzle flash, recoil, projectile launch
 
 **When Firing**:
@@ -89,15 +89,15 @@ The combat model uses this algorithm to determine when a weapon fires:
 ```typescript
 function weaponFiresOnRound(weapon: WeaponDefinition, round: number): boolean {
   const firstRound = weapon.warmup || 1;
-  
+
   if (round < firstRound) {
     return false; // Still in initial charging phase
   }
-  
+
   if (round === firstRound) {
     return true; // First activation
   }
-  
+
   return (round - firstRound) % weapon.cooldown === 0; // Subsequent activations
 }
 ```
@@ -112,7 +112,7 @@ function weaponFiresOnRound(weapon: WeaponDefinition, round: number): boolean {
 
 **Source Data**:
 - warmup=1
-- cooldown=1  
+- cooldown=1
 - shots=2
 
 **Firing Pattern** (rounds 1-10):
@@ -229,20 +229,20 @@ A weapon with `shots=4` fires **four consecutive shots** when activated.
 ## Domain Correctness Notes
 
 ### What We Know
-✅ Warmup/cooldown/shots values exist in STFC game data  
-✅ Pattern derivation algorithm produces expected results  
-✅ Augur firing pattern validated via demos  
+✅ Warmup/cooldown/shots values exist in STFC game data
+✅ Pattern derivation algorithm produces expected results
+✅ Augur firing pattern validated via demos
 ✅ Visualization layer successfully consumes combat events
 
 ### What We Assume
-🔬 Weapon listing order determines firing order (when warmup is equal)  
-🔬 Round duration is constant at 1 second  
+🔬 Weapon listing order determines firing order (when warmup is equal)
+🔬 Round duration is constant at 1 second
 🔬 All weapons follow warmup/cooldown model (no irregular patterns)
 
 ### What We Don't Know
-❓ How officer abilities affect weapon timing  
-❓ How critical hits or special effects modify firing  
-❓ Multi-ship combat sequencing (attacker vs defender)  
+❓ How officer abilities affect weapon timing
+❓ How critical hits or special effects modify firing
+❓ Multi-ship combat sequencing (attacker vs defender)
 ❓ Whether any ships have non-standard weapon timing
 
 **Validation Status**: See [docs/combat-assumptions.md](combat-assumptions.md) for detailed assumption tracking.

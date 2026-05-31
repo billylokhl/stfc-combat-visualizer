@@ -2,10 +2,10 @@
 
 **⚠️ OBSOLETE DOCUMENT ⚠️**
 
-**Status**: Migration completed in Milestone 6 (May 30, 2026)  
+**Status**: Migration completed in Milestone 6 (May 30, 2026)
 **Retained for**: Historical reference only
 
-This document tracked the decision criteria for migrating from FiringSchedule to warmup/cooldown/shots.  
+This document tracked the decision criteria for migrating from FiringSchedule to warmup/cooldown/shots.
 **The migration has been completed.** See [docs/domain-notes.md](domain-notes.md) for current architecture.
 
 ---

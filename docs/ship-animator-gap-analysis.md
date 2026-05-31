@@ -2,7 +2,7 @@
 
 **Purpose**: Inventory of hardcoded assumptions, architecture gaps, and technical debt in Ship Animator v0.
 
-**Last Updated**: May 31, 2026  
+**Last Updated**: May 31, 2026
 **Status**: Engineering Prototype (Milestone 3)
 
 ---

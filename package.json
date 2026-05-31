@@ -12,7 +12,8 @@
     "test": "echo 'Test script placeholder'",
     "demo:augur": "ts-node --project tsconfig.demo.json demos/augur-firing-pattern.ts",
     "demo:visual": "ts-node --project tsconfig.demo.json demos/augur-visual-events.ts",
-    "demo:validation": "ts-node --project tsconfig.demo.json demos/domain-validation.ts"
+    "demo:validation": "ts-node --project tsconfig.demo.json demos/domain-validation.ts",
+    "demo:two-ship": "ts-node --project tsconfig.demo.json demos/two-ship-combat.ts"
   },
   "devDependencies": {
     "typescript": "^5.0.0",
