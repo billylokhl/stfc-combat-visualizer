@@ -1,0 +1,19 @@
+{
+  "name": "@stfc-vi/combat-model",
+  "version": "0.1.0",
+  "description": "Combat mechanics and event generation",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "keywords": ["stfc", "combat", "model"],
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@stfc-vi/ship-model": "^0.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

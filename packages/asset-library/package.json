@@ -1,0 +1,16 @@
+{
+  "name": "@stfc-vi/asset-library",
+  "version": "0.1.0",
+  "description": "Visual assets and metadata",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "keywords": ["stfc", "assets"],
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

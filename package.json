@@ -1,0 +1,20 @@
+{
+  "name": "stfc-visual-intelligence",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Visual intelligence platform for Star Trek Fleet Command",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "echo 'Build script placeholder'",
+    "test": "echo 'Test script placeholder'"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
