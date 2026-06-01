@@ -4,7 +4,8 @@ import type { Ship } from '@stfc-vi/ship-model';
  * Kelvin Ship Definition
  *
  * Notes / Assumptions:
- * - Timing values are approximations intended to validate catalog support.
+ * - Timing values sourced from stfc.space/ships/711428193 (source_extract).
+ * - Kelvin has 3 weapons: 1 Phaser Turrets (energy) and 2 Photon Torpedoes (kinetic).
  * - Visual hardpoint ids chosen to match placeholders in visualization examples.
  */
 export const kelvin: Ship = {
@@ -16,9 +17,9 @@ export const kelvin: Ship = {
   weapons: [
     {
       id: 'kelvin_phaser1',
-      name: 'Phaser Beam I',
+      name: 'Phaser Turrets',
       type: 'beam',
-      hardpoint: 'kelvin_left_hp',
+      hardpoint: 'kelvin_phaser_hp',
       damageType: 'energy',
       averageDamage: 2500,
       warmup: 1,
@@ -26,37 +27,26 @@ export const kelvin: Ship = {
       shots: 2,
     },
     {
-      id: 'kelvin_phaser2',
-      name: 'Phaser Beam II',
-      type: 'beam',
-      hardpoint: 'kelvin_right_hp',
-      damageType: 'energy',
-      averageDamage: 2500,
-      warmup: 1,
-      cooldown: 1,
-      shots: 2,
-    },
-    {
-      id: 'kelvin_kinetic',
-      name: 'Kinetic Torpedo',
+      id: 'kelvin_photon1',
+      name: 'Photon Torpedo I',
       type: 'torpedo',
-      hardpoint: 'kelvin_kinetic_hp',
+      hardpoint: 'kelvin_photon1_hp',
       damageType: 'kinetic',
-      averageDamage: 8000,
+      averageDamage: 9000,
       warmup: 2,
       cooldown: 2,
-      shots: 1,
+      shots: 3,
     },
     {
-      id: 'kelvin_photon',
-      name: 'Photon Torpedo',
+      id: 'kelvin_photon2',
+      name: 'Photon Torpedo II',
       type: 'torpedo',
-      hardpoint: 'kelvin_photon_hp',
+      hardpoint: 'kelvin_photon2_hp',
       damageType: 'kinetic',
-      averageDamage: 10000,
-      warmup: 3,
-      cooldown: 3,
-      shots: 1,
+      averageDamage: 9000,
+      warmup: 2,
+      cooldown: 2,
+      shots: 3,
     },
   ],
 };

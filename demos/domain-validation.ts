@@ -20,9 +20,8 @@ import {
   vengeanceQuantumObserved,
   kelvinSourceData,
   kelvinPhaser1Observed,
-  kelvinPhaser2Observed,
-  kelvinKineticObserved,
-  kelvinPhotonObserved,
+  kelvinPhoton1Observed,
+  kelvinPhoton2Observed,
 } from '@stfc-vi/domain-validation';
 
 import type { ValidationResult, ShipSourceData } from '@stfc-vi/domain-validation';
@@ -104,9 +103,8 @@ function main() {
 
   const kelvinResults = validateShip(kelvinSourceData, [
     kelvinPhaser1Observed,
-    kelvinPhaser2Observed,
-    kelvinKineticObserved,
-    kelvinPhotonObserved,
+    kelvinPhoton1Observed,
+    kelvinPhoton2Observed,
   ]);
 
   console.log(generateValidationReport(kelvinResults));

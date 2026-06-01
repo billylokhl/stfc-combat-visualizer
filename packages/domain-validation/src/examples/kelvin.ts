@@ -8,7 +8,8 @@
 import type { ShipSourceData, ObservedFiringPattern } from '../types';
 
 /**
- * Kelvin source data (HYPOTHETICAL - not extracted from stfc.space)
+ * Kelvin source data (extracted from stfc.space/ships/711428193)
+ * 3 weapons: 1 Phaser Turrets (energy), 2 Photon Torpedoes (kinetic)
  */
 export const kelvinSourceData: ShipSourceData = {
   shipId: 'kelvin',
@@ -16,40 +17,32 @@ export const kelvinSourceData: ShipSourceData = {
   weapons: [
     {
       weaponId: 'kelvin_phaser1',
-      weaponName: 'Phaser Beam (1)',
+      weaponName: 'Phaser Turrets',
       warmup: 1,
       cooldown: 1,
       shots: 2,
     },
     {
-      weaponId: 'kelvin_phaser2',
-      weaponName: 'Phaser Beam (2)',
-      warmup: 1,
-      cooldown: 1,
-      shots: 2,
-    },
-    {
-      weaponId: 'kelvin_kinetic',
-      weaponName: 'Kinetic Torpedo',
+      weaponId: 'kelvin_photon1',
+      weaponName: 'Photon Torpedo I',
       warmup: 2,
       cooldown: 2,
-      shots: 1,
+      shots: 3,
     },
     {
-      weaponId: 'kelvin_photon',
-      weaponName: 'Photon Torpedo',
-      warmup: 3,
-      cooldown: 3,
-      shots: 1,
+      weaponId: 'kelvin_photon2',
+      weaponName: 'Photon Torpedo II',
+      warmup: 2,
+      cooldown: 2,
+      shots: 3,
     },
   ],
-  source: 'HYPOTHETICAL - firing-pattern-analysis.md assumptions',
+  source: 'stfc.space/ships/711428193 (source_extract)',
 };
 
 /**
  * Observed patterns (PLACEHOLDER - needs real battle-log data)
  */
 export const kelvinPhaser1Observed: ObservedFiringPattern | null = null;
-export const kelvinPhaser2Observed: ObservedFiringPattern | null = null;
-export const kelvinKineticObserved: ObservedFiringPattern | null = null;
-export const kelvinPhotonObserved: ObservedFiringPattern | null = null;
+export const kelvinPhoton1Observed: ObservedFiringPattern | null = null;
+export const kelvinPhoton2Observed: ObservedFiringPattern | null = null;
