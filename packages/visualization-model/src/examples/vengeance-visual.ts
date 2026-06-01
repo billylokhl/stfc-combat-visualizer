@@ -7,10 +7,11 @@ export const vengeanceVisualDefinition: ShipVisualDefinition = {
   displayName: 'Vengeance (placeholder)',
   hull: {
     shape: 'rectangle',
-    width: 120,
-    height: 70,
+    width: 160,
+    height: 160,
     label: 'VENGEANCE',
   },
+  imagePath: 'u-s-s-vengeance.png',
   hardpoints: [
     {
       id: 'vengeance_photon_hp',

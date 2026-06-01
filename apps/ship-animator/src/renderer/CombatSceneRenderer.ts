@@ -50,6 +50,9 @@ export class CombatSceneRenderer {
   private defenderVisual: ShipVisualDefinition;
   private layout: CombatSceneLayout;
 
+  // Ship sprite image cache — keyed by imagePath filename
+  private shipImages: Map<string, HTMLImageElement> = new Map();
+
   // Projectile state — renderer-owned, visual only
   private activeProjectiles: SceneProjectile[] = [];
   private launchedProjectileIds: Set<string> = new Set();
@@ -160,6 +163,20 @@ export class CombatSceneRenderer {
     );
   }
 
+  /**
+   * Load or return cached HTMLImageElement for a given imagePath filename.
+   * Images are served from the ships asset directory via Vite's publicDir.
+   */
+  private getOrLoadImage(imagePath: string): HTMLImageElement {
+    let img = this.shipImages.get(imagePath);
+    if (!img) {
+      img = new Image();
+      img.src = `${import.meta.env.BASE_URL}ships/${imagePath}`;
+      this.shipImages.set(imagePath, img);
+    }
+    return img;
+  }
+
   private renderShip(
     role: ShipRole,
     visualDefinition: ShipVisualDefinition,
@@ -171,16 +188,64 @@ export class CombatSceneRenderer {
     const hullWidth = hull.width * scale;
     const hullHeight = hull.height * scale;
 
+    const labelColor = role === 'attacker' ? '#4caf50' : '#2196f3';
+
+    if (visualDefinition.imagePath) {
+      const img = this.getOrLoadImage(visualDefinition.imagePath);
+
+      if (img.complete && img.naturalWidth > 0) {
+        // Contain-fit: maintain natural aspect ratio within hull bounds
+        const aspect = img.naturalWidth / img.naturalHeight;
+        let drawWidth: number;
+        let drawHeight: number;
+        if (aspect >= 1) {
+          drawWidth = hullWidth;
+          drawHeight = hullWidth / aspect;
+        } else {
+          drawHeight = hullHeight;
+          drawWidth = hullHeight * aspect;
+        }
+
+        // Defender is mirrored horizontally so ships face each other
+        const mirror = role === 'defender';
+
+        this.ctx.save();
+        this.ctx.translate(anchor.x, anchor.y);
+        if (mirror) {
+          this.ctx.scale(-1, 1);
+        }
+        this.ctx.drawImage(img, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+        this.ctx.restore();
+      } else {
+        // Image not yet loaded — render placeholder rectangle while loading
+        this.renderShipPlaceholder(anchor.x, anchor.y, hullWidth, hullHeight, hull.label ?? visualDefinition.displayName);
+      }
+    } else {
+      this.renderShipPlaceholder(anchor.x, anchor.y, hullWidth, hullHeight, hull.label ?? visualDefinition.displayName);
+    }
+
+    // Role label above the ship
+    this.ctx.fillStyle = labelColor;
+    this.ctx.font = '11px monospace';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'bottom';
+    this.ctx.fillText(role.toUpperCase(), anchor.x, anchor.y - hullHeight / 2 - 14);
+
+    this.renderHardpoints(role, visualDefinition, weaponStates);
+  }
+
+  private renderShipPlaceholder(
+    cx: number,
+    cy: number,
+    w: number,
+    h: number,
+    label: string
+  ): void {
     this.ctx.fillStyle = '#333';
     this.ctx.strokeStyle = '#666';
     this.ctx.lineWidth = 2;
     this.ctx.beginPath();
-    this.ctx.rect(
-      anchor.x - hullWidth / 2,
-      anchor.y - hullHeight / 2,
-      hullWidth,
-      hullHeight
-    );
+    this.ctx.rect(cx - w / 2, cy - h / 2, w, h);
     this.ctx.fill();
     this.ctx.stroke();
 
@@ -188,14 +253,7 @@ export class CombatSceneRenderer {
     this.ctx.font = '12px monospace';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
-    this.ctx.fillText(hull.label || visualDefinition.displayName, anchor.x, anchor.y);
-
-    this.ctx.fillStyle = role === 'attacker' ? '#4caf50' : '#2196f3';
-    this.ctx.font = '11px monospace';
-    this.ctx.textBaseline = 'bottom';
-    this.ctx.fillText(role.toUpperCase(), anchor.x, anchor.y - hullHeight / 2 - 14);
-
-    this.renderHardpoints(role, visualDefinition, weaponStates);
+    this.ctx.fillText(label, cx, cy);
   }
 
   private renderHardpoints(

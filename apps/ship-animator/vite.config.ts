@@ -5,6 +5,7 @@ import path from 'path';
 export default defineConfig({
   base: '/stfc-combat-visualizer/',
   plugins: [react()],
+  publicDir: path.resolve(__dirname, '../../assets'),
   resolve: {
     alias: {
       '@stfc-vi/ship-model': path.resolve(__dirname, '../../packages/ship-model/src'),

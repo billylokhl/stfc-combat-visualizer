@@ -7,10 +7,11 @@ export const kelvinVisualDefinition: ShipVisualDefinition = {
   displayName: 'Kelvin (placeholder)',
   hull: {
     shape: 'rectangle',
-    width: 90,
-    height: 50,
+    width: 150,
+    height: 150,
     label: 'KELVIN',
   },
+  imagePath: 'u-s-s-kelvin.png',
   hardpoints: [
     {
       id: 'kelvin_left_hp',

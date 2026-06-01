@@ -16,10 +16,11 @@ export const augurVisualDefinition: ShipVisualDefinition = {
   displayName: 'Augur',
   hull: {
     shape: 'rectangle',
-    width: 100,
-    height: 60,
+    width: 150,
+    height: 150,
     label: 'AUGUR',
   },
+  imagePath: 'augur.png',
   hardpoints: [
     {
       id: 'augur_left_beam_hp',

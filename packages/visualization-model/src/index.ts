@@ -167,6 +167,13 @@ export interface ShipVisualDefinition {
   /** Hardpoint definitions for this ship */
   hardpoints: HardpointDefinition[];
 
+  /**
+   * Filename of the ship sprite image (e.g. 'augur.png').
+   * Resolved by the renderer relative to the ships asset directory.
+   * Optional — renderers fall back to placeholder geometry when absent.
+   */
+  imagePath?: string;
+
   /** Optional visual-only metadata */
   metadata?: {
     classification?: string;
