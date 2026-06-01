@@ -53,7 +53,25 @@ Visualizes ship firing patterns, weapon timing, and combat rhythm through animat
 
 ## Getting Started
 
-This repository is currently in bootstrap phase. Package scaffolding and placeholder interfaces have been created.
+This repository contains a set of packages and a demo application for visualizing ship firing patterns and combat events.
+
+Local development (quick start):
+
+1. Install dependencies at the repo root:
+
+```bash
+npm install
+```
+
+2. Start the demo app (ship-animator):
+
+```bash
+cd apps/ship-animator
+npm install
+npm run dev
+```
+
+3. Open the local dev server URL shown by Vite (usually http://localhost:5173).
 
 ## Documentation
 
@@ -62,4 +80,36 @@ This repository is currently in bootstrap phase. Package scaffolding and placeho
 
 ## Status
 
-**Bootstrap Phase**: Initial repository structure and documentation established. Domain models and applications are placeholders awaiting implementation.
+**Release baseline v0.1.0**: This repository now includes a working visualization pipeline and a public demo deployment. The visualization renderer and demo application are functional and suitable for exploratory use and demonstration purposes. Several domain packages (ship-model, combat-model, visualization-model) contain production-minded type definitions and examples, but some combat timing and provenance data remain under active validation.
+
+## Public Demo
+
+The project is publicly deployed as a GitHub Pages demo:
+
+https://billylokhl.github.io/stfc-combat-visualizer/
+
+See the `apps/ship-animator` demo for examples and interactive visualization controls.
+
+## GitHub Pages Deployment
+
+This repository is configured to publish the demo to GitHub Pages. The published site hosts the `ship-animator` demo and is updated via the repository's CI/CD workflow when changes are pushed to `main`.
+
+If you need to rebuild and preview the static site locally, you can run a production build in the app folder:
+
+```bash
+cd apps/ship-animator
+npm run build
+npx serve dist
+```
+
+(Install `serve` globally or via `npm i -g serve`.)
+
+## Current Verification Status
+
+- **Visualization:** The visualization system (renderer, playback engine, and demo UI) is functional and renders weapon activations, projectile visuals, and timelines.
+- **Combat timing model:** The `combat-model` produces event schedules from weapon warmup/cooldown/shots parameters, but the timing model and some ship data values are still being validated against battle logs and authoritative sources.
+- **Provenance & verification:** Catalog entries include `verificationStatus` and `provenanceCategory` indicators in the data packages; consult those fields before treating data as authoritative.
+
+## Verification Disclaimer
+
+This project is a combat visualizer, not a combat simulator. Visual patterns are derived from configured weapon timing parameters and should not be interpreted as verified combat outcomes. Do not promote unverified data to `verified` without supporting evidence (see `docs/data-verification-policy.md`).
