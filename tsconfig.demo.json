@@ -18,7 +18,7 @@
       "@stfc-vi/domain-validation/*": ["packages/domain-validation/src/*"]
     }
   },
-  "include": ["demos/**/*", "packages/**/*"],
+  "include": ["demos/**/*", "packages/**/*", "scripts/**/*"],
   "ts-node": {
     "require": ["tsconfig-paths/register"]
   }
