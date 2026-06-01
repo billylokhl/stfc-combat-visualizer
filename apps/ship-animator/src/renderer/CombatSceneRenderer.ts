@@ -68,6 +68,9 @@ export class CombatSceneRenderer {
   // Impact effect state — renderer-owned, visual only
   private activeImpactEffects: ImpactEffect[] = [];
 
+  // Debug overlay state
+  private debugOverlayEnabled: boolean = false;
+
   constructor(
     canvas: HTMLCanvasElement,
     attackerVisual: ShipVisualDefinition,
@@ -98,6 +101,11 @@ export class CombatSceneRenderer {
       this.attackerVisual,
       this.defenderVisual
     );
+  }
+
+  /** Enable or disable the hardpoint debug overlay. */
+  setDebugOverlayEnabled(enabled: boolean): void {
+    this.debugOverlayEnabled = enabled;
   }
 
   /** Clear all projectile and impact effect state. Called on round change, restart, and recreation. */
@@ -132,6 +140,9 @@ export class CombatSceneRenderer {
     this.renderProjectiles(state.roundTime);
     this.renderImpactEffects(state.roundTime);
     this.renderRoundIndicator(state.round);
+    if (this.debugOverlayEnabled) {
+      this.renderDebugOverlay();
+    }
   }
 
   private clear(): void {
@@ -569,5 +580,136 @@ export class CombatSceneRenderer {
     this.ctx.textAlign = 'left';
     this.ctx.textBaseline = 'top';
     this.ctx.fillText(`ROUND ${round}`, 20, 20);
+  }
+
+  // ─── Debug Overlay ────────────────────────────────────────────────────────
+
+  private renderDebugOverlay(): void {
+    this.renderRoleDebugOverlay('attacker', this.attackerVisual);
+    this.renderRoleDebugOverlay('defender', this.defenderVisual);
+  }
+
+  private renderRoleDebugOverlay(role: ShipRole, visualDefinition: ShipVisualDefinition): void {
+    const hardpoints = this.getRenderedHardpoints(role, visualDefinition);
+
+    for (const hp of hardpoints) {
+      const def = hp.definition;
+      const { x, y } = hp;
+
+      // Compute display coords — prefer calibrated spriteCoords, fall back to derived
+      let coordStr: string;
+      if (def.spriteCoords) {
+        coordStr = `(${def.spriteCoords.nx.toFixed(2)}, ${def.spriteCoords.ny.toFixed(2)})`;
+      } else {
+        const nx = 0.5 + def.location.x / visualDefinition.hull.width;
+        const ny = 0.5 + def.location.y / visualDefinition.hull.height;
+        coordStr = `(${nx.toFixed(2)}, ${ny.toFixed(2)})`;
+      }
+
+      // Draw a bright outer ring distinct from the normal hardpoint marker
+      this.ctx.strokeStyle = '#ffff00';
+      this.ctx.lineWidth = 2;
+      this.ctx.beginPath();
+      this.ctx.arc(x, y, 20, 0, Math.PI * 2);
+      this.ctx.stroke();
+
+      // Text lines: short code / weapon name / coords
+      const lines = [def.label, def.name, coordStr];
+      const lineHeight = 13;
+      const padding = 4;
+
+      this.ctx.font = '11px monospace';
+      const maxWidth = Math.max(...lines.map((l) => this.ctx.measureText(l).width));
+      const bgWidth = maxWidth + padding * 2;
+      const bgHeight = lines.length * lineHeight + padding * 2;
+
+      // Position text box below the ring
+      const boxX = x - bgWidth / 2;
+      const boxY = y + 24;
+
+      // Dark semi-transparent background for readability on any ship sprite
+      this.ctx.fillStyle = 'rgba(0, 0, 0, 0.78)';
+      this.ctx.fillRect(boxX, boxY, bgWidth, bgHeight);
+
+      this.ctx.strokeStyle = 'rgba(255, 255, 0, 0.5)';
+      this.ctx.lineWidth = 1;
+      this.ctx.strokeRect(boxX, boxY, bgWidth, bgHeight);
+
+      this.ctx.fillStyle = '#ffffff';
+      this.ctx.font = '11px monospace';
+      this.ctx.textAlign = 'center';
+      this.ctx.textBaseline = 'top';
+      for (let i = 0; i < lines.length; i++) {
+        this.ctx.fillText(lines[i], x, boxY + padding + i * lineHeight);
+      }
+    }
+  }
+
+  /**
+   * Log canvas click position as normalized sprite coordinates and nearest hardpoint.
+   * Called by the React component when the canvas is clicked while the overlay is enabled.
+   */
+  handleDebugClick(canvasX: number, canvasY: number): void {
+    if (!this.debugOverlayEnabled) return;
+
+    const roles: ShipRole[] = ['attacker', 'defender'];
+    for (const role of roles) {
+      const visualDef = role === 'attacker' ? this.attackerVisual : this.defenderVisual;
+      const anchor = this.getRoleAnchor(role);
+      const scale = this.getRoleScale(role);
+      const hull = visualDef.hull;
+      const hullWidth = hull.width * scale;
+      const hullHeight = hull.height * scale;
+
+      // Replicate contain-fit sprite draw dimensions from getRenderedHardpoints
+      let imgDrawWidth = hullWidth;
+      let imgDrawHeight = hullHeight;
+      if (visualDef.imagePath) {
+        const img = this.shipImages.get(visualDef.imagePath);
+        if (img?.complete && img.naturalWidth > 0) {
+          const aspect = img.naturalWidth / img.naturalHeight;
+          if (aspect >= 1) {
+            imgDrawWidth = hullWidth;
+            imgDrawHeight = hullWidth / aspect;
+          } else {
+            imgDrawHeight = hullHeight;
+            imgDrawWidth = hullHeight * aspect;
+          }
+        }
+      }
+
+      const spriteLeft = anchor.x - imgDrawWidth / 2;
+      const spriteTop = anchor.y - imgDrawHeight / 2;
+
+      // Normalize click relative to sprite bounds
+      let nx = (canvasX - spriteLeft) / imgDrawWidth;
+      let ny = (canvasY - spriteTop) / imgDrawHeight;
+
+      // Defender sprite is rendered mirrored — un-flip so coords match un-mirrored sprite
+      if (role === 'defender') {
+        nx = 1 - nx;
+      }
+
+      // Find nearest hardpoint by canvas distance
+      const hardpoints = this.getRenderedHardpoints(role, visualDef);
+      let nearest: RenderedHardpoint | null = null;
+      let nearestDist = Infinity;
+      for (const hp of hardpoints) {
+        const dx = canvasX - hp.x;
+        const dy = canvasY - hp.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < nearestDist) {
+          nearestDist = dist;
+          nearest = hp;
+        }
+      }
+
+      console.log(
+        `[HARDPOINT DEBUG] ${role.toUpperCase()}\n` +
+        `  canvas: (${Math.round(canvasX)}, ${Math.round(canvasY)})\n` +
+        `  sprite: nx=${nx.toFixed(3)}, ny=${ny.toFixed(3)}\n` +
+        `  nearest: ${nearest?.definition.id ?? 'none'} "${nearest?.definition.name ?? ''}" (${nearestDist.toFixed(1)}px)`
+      );
+    }
   }
 }

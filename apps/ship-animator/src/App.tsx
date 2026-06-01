@@ -70,6 +70,7 @@ export default function App() {
   const [currentTime, setCurrentTime] = useState(0);
   const [currentRound, setCurrentRound] = useState(1);
   const [resetKey, setResetKey] = useState(0);
+  const [debugOverlay, setDebugOverlay] = useState(false);
 
   useEffect(() => {
     const nextAttacker = getShipById(attackerId);
@@ -84,6 +85,16 @@ export default function App() {
     setCurrentRound(1);
     setResetKey((key) => key + 1);
   }, [attackerId, defenderId]);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'd' || e.key === 'D') {
+        setDebugOverlay((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, []);
 
   const handlePlayPause = () => setIsPlaying((playing) => !playing);
 
@@ -118,6 +129,23 @@ export default function App() {
         <h1 style={{ fontSize: '18px', fontWeight: 'normal', margin: 0 }}>
           Ship Animator — Engineering Prototype
         </h1>
+        <button
+          onClick={() => setDebugOverlay((prev) => !prev)}
+          style={{
+            marginLeft: 'auto',
+            padding: '4px 10px',
+            fontSize: '11px',
+            fontFamily: 'monospace',
+            background: debugOverlay ? '#3a3a00' : '#1a1a1a',
+            color: debugOverlay ? '#ffff00' : '#888',
+            border: debugOverlay ? '1px solid #ffff00' : '1px solid #444',
+            borderRadius: '3px',
+            cursor: 'pointer',
+          }}
+          title="Toggle hardpoint debug overlay (D)"
+        >
+          DEBUG OVERLAY [{debugOverlay ? 'ON' : 'OFF'}] (D)
+        </button>
       </div>
 
       <ShipMetadataPanel entry={attackerEntry} defender={defenderEntry} />
@@ -156,6 +184,7 @@ export default function App() {
                 resetKey={resetKey}
                 onTimeUpdate={setCurrentTime}
                 onRoundUpdate={setCurrentRound}
+                debugOverlay={debugOverlay}
               />
             ) : (
               <div style={{ display: 'flex', height: '100%' }}>

@@ -18,6 +18,7 @@ interface CombatCanvasProps {
   resetKey: number;
   onTimeUpdate: (time: number) => void;
   onRoundUpdate: (round: number) => void;
+  debugOverlay?: boolean;
 }
 
 const ACTIVE_DURATION = 100;
@@ -75,6 +76,7 @@ export default function CombatCanvas({
   resetKey,
   onTimeUpdate,
   onRoundUpdate,
+  debugOverlay = false,
 }: CombatCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<PlaybackEngine | null>(null);
@@ -136,6 +138,30 @@ export default function CombatCanvas({
     if (!engineRef.current) return;
     engineRef.current.setSpeed(playbackSpeed);
   }, [playbackSpeed]);
+
+  // Sync debug overlay state with the renderer
+  useEffect(() => {
+    rendererRef.current?.setDebugOverlayEnabled(debugOverlay);
+  }, [debugOverlay]);
+
+  // Click-to-log normalized coordinates when the debug overlay is active
+  useEffect(() => {
+    if (!debugOverlay || !canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const handleClick = (e: MouseEvent) => {
+      if (!rendererRef.current) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
+      rendererRef.current.handleDebugClick(x, y);
+    };
+
+    canvas.addEventListener('click', handleClick);
+    return () => canvas.removeEventListener('click', handleClick);
+  }, [debugOverlay]);
 
   useEffect(() => {
     if (!engineRef.current || !rendererRef.current) return;
