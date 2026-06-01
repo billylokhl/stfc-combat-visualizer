@@ -1,10 +1,8 @@
 import type { ShipVisualDefinition } from '../index';
 
-// Placeholder visual definition for Vengeance
-// NOTE: Placeholder — hardpoint positions are placeholder estimates; not derived from game assets.
 export const vengeanceVisualDefinition: ShipVisualDefinition = {
   shipId: 'vengeance',
-  displayName: 'Vengeance (placeholder)',
+  displayName: 'Vengeance',
   hull: {
     shape: 'rectangle',
     width: 160,
@@ -20,8 +18,7 @@ export const vengeanceVisualDefinition: ShipVisualDefinition = {
       label: 'PT',
       position: 'center',
       location: { x: 0, y: -35 },
-      // placeholder: converted from location; not calibrated against sprite
-      spriteCoords: { nx: 0.50, ny: 0.28 },
+      spriteCoords: { nx: 0.38, ny: 0.20 },
       weaponType: 'torpedo',
     },
     {
@@ -31,8 +28,7 @@ export const vengeanceVisualDefinition: ShipVisualDefinition = {
       label: 'PH',
       position: 'left',
       location: { x: -50, y: -15 },
-      // placeholder: converted from location; not calibrated against sprite
-      spriteCoords: { nx: 0.19, ny: 0.41 },
+      spriteCoords: { nx: 0.08, ny: 0.38 },
       weaponType: 'beam',
     },
     {
@@ -42,8 +38,7 @@ export const vengeanceVisualDefinition: ShipVisualDefinition = {
       label: 'PP',
       position: 'right',
       location: { x: 50, y: -15 },
-      // placeholder: converted from location; not calibrated against sprite
-      spriteCoords: { nx: 0.81, ny: 0.41 },
+      spriteCoords: { nx: 0.62, ny: 0.10 },
       weaponType: 'beam',
     },
     {
@@ -53,8 +48,7 @@ export const vengeanceVisualDefinition: ShipVisualDefinition = {
       label: 'QT',
       position: 'center',
       location: { x: 0, y: 35 },
-      // placeholder: converted from location; not calibrated against sprite
-      spriteCoords: { nx: 0.50, ny: 0.72 },
+      spriteCoords: { nx: 0.42, ny: 0.28 },
       weaponType: 'torpedo',
     },
   ],
