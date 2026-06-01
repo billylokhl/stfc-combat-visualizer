@@ -145,12 +145,46 @@ export class CombatSceneRenderer {
   ): RenderedHardpoint[] {
     const anchor = this.getRoleAnchor(role);
     const scale = this.getRoleScale(role);
+    const hull = visualDefinition.hull;
+    const hullWidth = hull.width * scale;
+    const hullHeight = hull.height * scale;
 
-    return visualDefinition.hardpoints.map((hardpoint) => ({
-      definition: hardpoint,
-      x: anchor.x + hardpoint.location.x * scale,
-      y: anchor.y + hardpoint.location.y * scale,
-    }));
+    // Compute sprite draw dimensions to map spriteCoords to screen pixels.
+    // Mirrors the contain-fit logic in renderShip.
+    let imgDrawWidth = hullWidth;
+    let imgDrawHeight = hullHeight;
+    if (visualDefinition.imagePath) {
+      const img = this.shipImages.get(visualDefinition.imagePath);
+      if (img?.complete && img.naturalWidth > 0) {
+        const aspect = img.naturalWidth / img.naturalHeight;
+        if (aspect >= 1) {
+          imgDrawWidth = hullWidth;
+          imgDrawHeight = hullWidth / aspect;
+        } else {
+          imgDrawHeight = hullHeight;
+          imgDrawWidth = hullHeight * aspect;
+        }
+      }
+    }
+
+    return visualDefinition.hardpoints.map((hardpoint) => {
+      if (hardpoint.spriteCoords) {
+        const { nx, ny } = hardpoint.spriteCoords;
+        // Defender sprite is mirrored horizontally so ships face each other.
+        // Flip nx so spriteCoords always reference the un-mirrored sprite.
+        const effectiveNx = role === 'defender' ? 1 - nx : nx;
+        return {
+          definition: hardpoint,
+          x: anchor.x - imgDrawWidth / 2 + effectiveNx * imgDrawWidth,
+          y: anchor.y - imgDrawHeight / 2 + ny * imgDrawHeight,
+        };
+      }
+      return {
+        definition: hardpoint,
+        x: anchor.x + hardpoint.location.x * scale,
+        y: anchor.y + hardpoint.location.y * scale,
+      };
+    });
   }
 
   private findHardpoint(

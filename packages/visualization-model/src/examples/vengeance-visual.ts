@@ -20,6 +20,8 @@ export const vengeanceVisualDefinition: ShipVisualDefinition = {
       label: 'PT',
       position: 'center',
       location: { x: 0, y: -35 },
+      // placeholder: converted from location; not calibrated against sprite
+      spriteCoords: { nx: 0.50, ny: 0.28 },
       weaponType: 'torpedo',
     },
     {
@@ -29,6 +31,8 @@ export const vengeanceVisualDefinition: ShipVisualDefinition = {
       label: 'PH',
       position: 'left',
       location: { x: -50, y: -15 },
+      // placeholder: converted from location; not calibrated against sprite
+      spriteCoords: { nx: 0.19, ny: 0.41 },
       weaponType: 'beam',
     },
     {
@@ -38,6 +42,8 @@ export const vengeanceVisualDefinition: ShipVisualDefinition = {
       label: 'PP',
       position: 'right',
       location: { x: 50, y: -15 },
+      // placeholder: converted from location; not calibrated against sprite
+      spriteCoords: { nx: 0.81, ny: 0.41 },
       weaponType: 'beam',
     },
     {
@@ -47,6 +53,8 @@ export const vengeanceVisualDefinition: ShipVisualDefinition = {
       label: 'QT',
       position: 'center',
       location: { x: 0, y: 35 },
+      // placeholder: converted from location; not calibrated against sprite
+      spriteCoords: { nx: 0.50, ny: 0.72 },
       weaponType: 'torpedo',
     },
   ],

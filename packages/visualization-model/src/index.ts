@@ -144,6 +144,30 @@ export interface HardpointDefinition {
     y: number;
   };
 
+  /**
+   * Normalized sprite coordinates for calibrated placement.
+   *
+   * Values in the range [0, 1] where (0, 0) is the top-left of the sprite image
+   * and (1, 1) is the bottom-right. When present and the sprite image is loaded,
+   * the renderer uses these in preference to `location`.
+   *
+   * Calibration workflow:
+   *   1. Open the ship sprite in any image editor.
+   *   2. Find the pixel position of the weapon origin on the sprite.
+   *   3. Divide by image dimensions: nx = px / width, ny = py / height.
+   *   4. Update this field and mark the hardpoint as calibrated.
+   *
+   * Until calibrated, use placeholder values converted from location:
+   *   nx = 0.5 + location.x / hull.width
+   *   ny = 0.5 + location.y / hull.height
+   */
+  spriteCoords?: {
+    /** Normalized x position, 0 = left edge, 1 = right edge */
+    nx: number;
+    /** Normalized y position, 0 = top edge, 1 = bottom edge */
+    ny: number;
+  };
+
   /** Weapon type hint for visual styling */
   weaponType?: 'beam' | 'torpedo' | 'kinetic' | 'energy' | 'special';
 }

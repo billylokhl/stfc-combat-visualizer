@@ -29,6 +29,8 @@ export const augurVisualDefinition: ShipVisualDefinition = {
       label: 'L',
       position: 'left',
       location: { x: -60, y: 0 },
+      // placeholder: converted from location; not calibrated against sprite
+      spriteCoords: { nx: 0.10, ny: 0.50 },
       weaponType: 'beam',
     },
     {
@@ -38,6 +40,8 @@ export const augurVisualDefinition: ShipVisualDefinition = {
       label: 'R',
       position: 'right',
       location: { x: 60, y: 0 },
+      // placeholder: converted from location; not calibrated against sprite
+      spriteCoords: { nx: 0.90, ny: 0.50 },
       weaponType: 'beam',
     },
     {
@@ -47,6 +51,8 @@ export const augurVisualDefinition: ShipVisualDefinition = {
       label: 'O',
       position: 'center',
       location: { x: 0, y: -40 },
+      // placeholder: converted from location; not calibrated against sprite
+      spriteCoords: { nx: 0.50, ny: 0.23 },
       weaponType: 'torpedo',
     },
   ],
