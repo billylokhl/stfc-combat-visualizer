@@ -1,7 +1,7 @@
-# STFC Visual Intelligence Platform
+# STFC Combat Visualizer
 
 ## Mission
-Create a modern visual intelligence platform for Star Trek Fleet Command (STFC) that transforms complex ship data into engaging, intuitive, and highly visual experiences.
+Create a modern combat visualizer for Star Trek Fleet Command (STFC) that transforms complex ship data into engaging, intuitive, and highly visual experiences.
 
 The platform should prioritize visual understanding over spreadsheets, tables, and dense textual explanations.
 

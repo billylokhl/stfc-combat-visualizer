@@ -1,4 +1,4 @@
-# STFC Visual Intelligence — Project Instructions
+# STFC Combat Visualizer — Project Instructions
 
 These instructions apply to all AI-assisted development on this project.
 They capture architectural decisions, domain assumptions, and workflow guardrails established in Milestones 1–13.

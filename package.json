@@ -1,8 +1,8 @@
 {
-  "name": "stfc-visual-intelligence",
+  "name": "stfc-combat-visualizer",
   "version": "0.1.0",
   "private": true,
-  "description": "Visual intelligence platform for Star Trek Fleet Command",
+  "description": "Combat visualizer for Star Trek Fleet Command",
   "workspaces": [
     "packages/*",
     "apps/*"

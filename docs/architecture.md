@@ -36,7 +36,7 @@ Before proposing architectural changes to domain models:
 ---
 
 ## Monorepo Structure
-stfc-visual-intelligence/
+stfc-combat-visualizer/
 
 docs/
 

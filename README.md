@@ -1,6 +1,6 @@
-# STFC Visual Intelligence
+# STFC Combat Visualizer
 
-A modern visual intelligence platform for Star Trek Fleet Command (STFC) that transforms complex ship data into engaging, intuitive, and highly visual experiences.
+A modern combat visualizer for Star Trek Fleet Command (STFC) that transforms complex ship data into engaging, intuitive, and highly visual experiences.
 
 ## Overview
 
@@ -16,7 +16,7 @@ This monorepo contains shared domain models and applications for visualizing STF
 ## Repository Structure
 
 ```
-stfc-visual-intelligence/
+stfc-combat-visualizer/
 ├── docs/                    # Platform documentation
 │   ├── vision.md           # Product vision and philosophy
 │   └── architecture.md     # Technical architecture

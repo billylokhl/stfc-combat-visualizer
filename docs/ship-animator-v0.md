@@ -251,7 +251,7 @@ render(round: number, roundTime: number, activeEvents: VisualEvent[]) {
 ### Development Mode
 
 ```bash
-cd ~/sandbox/stfc-visual-intelligence
+cd ~/sandbox/stfc-combat-visualizer
 npm install  # Install all workspace dependencies
 cd apps/ship-animator
 npm run dev  # Start Vite dev server
@@ -428,7 +428,7 @@ This v0 proves the architecture works. Future milestones could add:
 
 ## Conclusion
 
-Ship Animator v0 is a **minimal but complete** proof that the STFC Visual Intelligence architecture works in practice. It demonstrates:
+Ship Animator v0 is a **minimal but complete** proof that the STFC Combat Visualizer architecture works in practice. It demonstrates:
 
 - Clean layer separation
 - Framework-agnosable domain packages

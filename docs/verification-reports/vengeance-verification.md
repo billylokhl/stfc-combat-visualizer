@@ -421,5 +421,5 @@ This status accurately reflects the current evidence:
 
 **Report Generated**: May 31, 2026
 **Milestone**: 12 - Vengeance Verification Report
-**Repository**: stfc-visual-intelligence
+**Repository**: stfc-combat-visualizer
 **Next Review**: When battle-log data becomes available

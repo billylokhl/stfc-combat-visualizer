@@ -1,6 +1,6 @@
 # Weapon Lifecycle Reference
 
-**Purpose**: Canonical explanation of weapon timing behavior in STFC Visual Intelligence.
+**Purpose**: Canonical explanation of weapon timing behavior in STFC Combat Visualizer.
 
 **Last Updated**: May 31, 2026
 
