@@ -24,6 +24,13 @@ interface SceneProjectile {
   duration: number;
 }
 
+interface ImpactEffect {
+  x: number;
+  y: number;
+  startTimeMs: number;
+  durationMs: number;
+}
+
 interface RenderedHardpoint {
   definition: HardpointDefinition;
   x: number;
@@ -58,6 +65,9 @@ export class CombatSceneRenderer {
   private launchedProjectileIds: Set<string> = new Set();
   private lastRenderedRound: number = -1;
 
+  // Impact effect state — renderer-owned, visual only
+  private activeImpactEffects: ImpactEffect[] = [];
+
   constructor(
     canvas: HTMLCanvasElement,
     attackerVisual: ShipVisualDefinition,
@@ -90,11 +100,12 @@ export class CombatSceneRenderer {
     );
   }
 
-  /** Clear all projectile state. Called on round change, restart, and recreation. */
+  /** Clear all projectile and impact effect state. Called on round change, restart, and recreation. */
   clearProjectileState(): void {
     this.activeProjectiles = [];
     this.launchedProjectileIds.clear();
     this.lastRenderedRound = -1;
+    this.activeImpactEffects = [];
   }
 
   render(state: CombatSceneRenderState): void {
@@ -119,6 +130,7 @@ export class CombatSceneRenderer {
     this.renderEvents('attacker', this.attackerVisual, state.attacker.activeEvents, state.roundTime);
     this.renderEvents('defender', this.defenderVisual, state.defender.activeEvents, state.roundTime);
     this.renderProjectiles(state.roundTime);
+    this.renderImpactEffects(state.roundTime);
     this.renderRoundIndicator(state.round);
   }
 
@@ -456,11 +468,22 @@ export class CombatSceneRenderer {
     }
   }
 
-  /** Remove projectiles that have reached their target. */
+  /** Remove projectiles that have reached their target and spawn impact effects. */
   private expireProjectiles(roundTime: number): void {
-    this.activeProjectiles = this.activeProjectiles.filter(
-      (p) => roundTime - p.startTime < p.duration
-    );
+    const remaining: SceneProjectile[] = [];
+    for (const p of this.activeProjectiles) {
+      if (roundTime - p.startTime < p.duration) {
+        remaining.push(p);
+      } else {
+        this.activeImpactEffects.push({
+          x: p.target.x,
+          y: p.target.y,
+          startTimeMs: p.startTime + p.duration,
+          durationMs: 450,
+        });
+      }
+    }
+    this.activeProjectiles = remaining;
   }
 
   /** Draw all in-flight projectiles as a dot with a short trail. */
@@ -490,6 +513,53 @@ export class CombatSceneRenderer {
       this.ctx.beginPath();
       this.ctx.arc(x, y, 4, 0, Math.PI * 2);
       this.ctx.fill();
+    }
+  }
+
+  /** Render expanding ring impact effects for completed projectiles. */
+  private renderImpactEffects(roundTime: number): void {
+    this.activeImpactEffects = this.activeImpactEffects.filter(
+      (e) => roundTime - e.startTimeMs < e.durationMs
+    );
+
+    for (const effect of this.activeImpactEffects) {
+      const elapsed = roundTime - effect.startTimeMs;
+      const t = Math.min(1, Math.max(0, elapsed / effect.durationMs));
+      const alpha = 1 - t;
+
+      // Primary expanding ring
+      const maxRadius = 40;
+      const radius = maxRadius * t;
+      this.ctx.strokeStyle = `rgba(100, 200, 255, ${alpha * 0.9})`;
+      this.ctx.lineWidth = 2;
+      this.ctx.beginPath();
+      this.ctx.arc(effect.x, effect.y, radius, 0, Math.PI * 2);
+      this.ctx.stroke();
+
+      // Secondary ring slightly behind the primary
+      if (t > 0.1) {
+        const innerRadius = maxRadius * (t - 0.1);
+        this.ctx.strokeStyle = `rgba(200, 240, 255, ${alpha * 0.5})`;
+        this.ctx.lineWidth = 1;
+        this.ctx.beginPath();
+        this.ctx.arc(effect.x, effect.y, innerRadius, 0, Math.PI * 2);
+        this.ctx.stroke();
+      }
+
+      // Subtle central glow that fades and shrinks
+      const glowRadius = 15 * (1 - t);
+      if (glowRadius > 0.5) {
+        const gradient = this.ctx.createRadialGradient(
+          effect.x, effect.y, 0,
+          effect.x, effect.y, glowRadius
+        );
+        gradient.addColorStop(0, `rgba(150, 220, 255, ${alpha * 0.6})`);
+        gradient.addColorStop(1, 'rgba(100, 180, 255, 0)');
+        this.ctx.fillStyle = gradient;
+        this.ctx.beginPath();
+        this.ctx.arc(effect.x, effect.y, glowRadius, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
     }
   }
 
