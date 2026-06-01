@@ -51,6 +51,12 @@ Visualizes ship firing patterns, weapon timing, and combat rhythm through animat
 3. **UI applications consume domain events** rather than implementing combat logic
 4. **Start simple**, add complexity only when needed
 
+## Development Prerequisites
+
+- **Node.js:** >= 18.0.0 (check via `node --version`)
+- **npm:** included with Node.js
+- **Monorepo setup:** This is an npm workspace monorepo. Dependencies are installed at the repository root.
+
 ## Getting Started
 
 This repository contains a set of packages and a demo application for visualizing ship firing patterns and combat events.
@@ -103,6 +109,14 @@ npx serve dist
 ```
 
 (Install `serve` globally or via `npm i -g serve`.)
+
+## Contributing Validation Evidence
+
+We welcome contributions with validation evidence, especially battle logs. To submit corrections or improvements:
+
+- **Battle logs:** If you have battle-log evidence, attach it to your contribution with details on how it validates the correction.
+- **Verification status:** Only upgrade `verificationStatus` to `verified` if supported by battle-log evidence or authoritative STFC source data (see `docs/data-verification-policy.md`).
+- **Provenance:** Document the `provenanceCategory` for all data contributions (see `docs/data-provenance-policy.md`).
 
 ## Current Verification Status
 
