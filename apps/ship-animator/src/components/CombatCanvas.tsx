@@ -88,6 +88,8 @@ export default function CombatCanvas({
   const rendererRef = useRef<CombatSceneRenderer | null>(null);
   const animationFrameRef = useRef<number>();
   const completionNotifiedRef = useRef(false);
+  const isPlayingRef = useRef(isPlaying);
+  const playbackCompleteRef = useRef(onPlaybackComplete);
   const sceneClockTimelines = useMemo<VisualRoundTimeline[]>(
     () => timelines.map((timeline) => ({
       round: timeline.round,
@@ -152,6 +154,14 @@ export default function CombatCanvas({
     engineRef.current.setSpeed(playbackSpeed);
   }, [playbackSpeed]);
 
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
+
+  useEffect(() => {
+    playbackCompleteRef.current = onPlaybackComplete;
+  }, [onPlaybackComplete]);
+
   // Sync debug overlay state with the renderer
   useEffect(() => {
     rendererRef.current?.setDebugOverlayEnabled(debugOverlay);
@@ -190,8 +200,8 @@ export default function CombatCanvas({
 
         if (!completionNotifiedRef.current) {
           completionNotifiedRef.current = true;
-          if (isPlaying) {
-            onPlaybackComplete?.();
+            if (isPlayingRef.current) {
+              playbackCompleteRef.current?.();
           }
         }
 
