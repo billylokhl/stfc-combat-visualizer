@@ -7,7 +7,7 @@
  */
 
 import type { Ship, WeaponDefinition } from '@stfc-vi/ship-model';
-import type { CombatEvent, RoundEvents } from '@stfc-vi/combat-model';
+import type { CombatEvent, RoundEvents, ShipRole } from '@stfc-vi/combat-model';
 
 /**
  * Visual event types that can be rendered by an animation engine
@@ -46,6 +46,14 @@ export interface VisualEvent {
     totalShots?: number;
     /** Round number for round_marker events */
     round?: number;
+    /** Ship role that emitted the event in two-ship combat */
+    sourceRole?: ShipRole;
+    /** Source ship id for two-ship combat */
+    sourceShipId?: string;
+    /** Sequential attack id within the scene round */
+    attackId?: string;
+    /** 0-indexed attack sequence in scene order */
+    attackSequence?: number;
   };
 }
 
@@ -94,6 +102,96 @@ export interface VisualRoundTimeline {
 
   /** Total duration of this round in milliseconds */
   duration: number;
+}
+
+/**
+ * Timing controls for sequential attack animation at the scene level.
+ */
+export interface SequentialAttackTimingConfig {
+  /** Delay before first attack in a round */
+  roundLeadInMs: number;
+  /** Gap between consecutive weapon activations */
+  attackGapMs: number;
+  /** Delay between shots in the same activation */
+  shotIntervalMs: number;
+  /** Recoil offset from attack start */
+  recoilDelayMs: number;
+  /** Muzzle flash offset from attack start */
+  muzzleFlashDelayMs: number;
+  /** Projectile launch offset from attack start */
+  projectileLaunchDelayMs: number;
+  /** Extra settle time after the final shot event in an activation */
+  attackTailMs: number;
+  /** Delay after the final activation before round transition */
+  roundOutroMs: number;
+}
+
+/**
+ * Default sequential timing tuned for readability.
+ */
+export const DEFAULT_SEQUENTIAL_ATTACK_TIMING: SequentialAttackTimingConfig = {
+  roundLeadInMs: 150,
+  attackGapMs: 170,
+  shotIntervalMs: 80,
+  recoilDelayMs: 0,
+  muzzleFlashDelayMs: 50,
+  projectileLaunchDelayMs: 100,
+  attackTailMs: 140,
+  roundOutroMs: 250,
+};
+
+/**
+ * Timing details for one shot within a sequential attack.
+ */
+export interface VisualAttackShot {
+  /** Shot index in the activation (0-indexed) */
+  shotIndex: number;
+  /** Total shots in this activation */
+  totalShots: number;
+  /** Offset from attack start in ms */
+  shotOffsetMs: number;
+  /** Absolute event timestamps in round time */
+  recoilTimestamp: number;
+  muzzleFlashTimestamp: number;
+  projectileLaunchTimestamp: number;
+}
+
+/**
+ * One weapon activation represented in scene sequence order.
+ */
+export interface VisualAttack {
+  /** Stable attack id within this timeline */
+  attackId: string;
+  /** 0-indexed order in the round */
+  attackSequence: number;
+  /** Combat round (1-indexed) */
+  round: number;
+  /** Source role for two-ship combat */
+  sourceRole: ShipRole;
+  /** Source ship id for two-ship combat */
+  sourceShipId?: string;
+  /** Weapon id for this activation */
+  weaponId: string;
+  /** Hardpoint id if resolved from visual definition */
+  hardpoint?: string;
+  /** Shot-level timing details */
+  shots: VisualAttackShot[];
+  /** Attack window in round time */
+  startTimestamp: number;
+  endTimestamp: number;
+}
+
+/**
+ * Scene-level round timeline where attacker/defender events are sequenced together.
+ */
+export interface VisualSceneRoundTimeline extends VisualRoundTimeline {
+  /** Ordered weapon activations for this round */
+  attacks: VisualAttack[];
+  /** Role-keyed weapon states used by the ship animator */
+  weaponStatesByRole: {
+    attacker: WeaponVisualState[];
+    defender: WeaponVisualState[];
+  };
 }
 
 /**
@@ -250,6 +348,105 @@ export const DEFAULT_TIMING: VisualTimingConfig = {
     bottom: 800,
   },
 };
+
+function getEventShotCount(event: CombatEvent): number {
+  return event.shots && event.shots > 0 ? event.shots : 1;
+}
+
+function getAttackWindowDuration(
+  shots: number,
+  config: SequentialAttackTimingConfig
+): number {
+  const shotCount = Math.max(1, shots);
+  const lastShotOffset = (shotCount - 1) * config.shotIntervalMs;
+  const lastEventOffset = Math.max(
+    config.recoilDelayMs,
+    config.muzzleFlashDelayMs,
+    config.projectileLaunchDelayMs
+  ) + lastShotOffset;
+
+  return lastEventOffset + config.attackTailMs;
+}
+
+function transformSequentialAttack(
+  event: CombatEvent,
+  hardpoint: HardpointDefinition | undefined,
+  attackSequence: number,
+  attackStartTimestamp: number,
+  config: SequentialAttackTimingConfig
+): { attack: VisualAttack; events: VisualEvent[] } {
+  const sourceRole: ShipRole = event.role || 'attacker';
+  const attackId = `r${event.round}-a${attackSequence + 1}-${sourceRole}-${event.weaponId || 'unknown'}`;
+  const totalShots = getEventShotCount(event);
+  const shots: VisualAttackShot[] = [];
+  const events: VisualEvent[] = [];
+
+  for (let shotIndex = 0; shotIndex < totalShots; shotIndex++) {
+    const shotOffsetMs = shotIndex * config.shotIntervalMs;
+    const recoilTimestamp = attackStartTimestamp + shotOffsetMs + config.recoilDelayMs;
+    const muzzleFlashTimestamp = attackStartTimestamp + shotOffsetMs + config.muzzleFlashDelayMs;
+    const projectileLaunchTimestamp = attackStartTimestamp + shotOffsetMs + config.projectileLaunchDelayMs;
+
+    shots.push({
+      shotIndex,
+      totalShots,
+      shotOffsetMs,
+      recoilTimestamp,
+      muzzleFlashTimestamp,
+      projectileLaunchTimestamp,
+    });
+
+    const data = {
+      shotIndex,
+      totalShots,
+      round: event.round,
+      sourceRole,
+      sourceShipId: event.shipId,
+      attackId,
+      attackSequence,
+    };
+
+    events.push({
+      type: 'recoil',
+      timestamp: recoilTimestamp,
+      weaponId: event.weaponId,
+      hardpoint: hardpoint?.id,
+      data,
+    });
+
+    events.push({
+      type: 'muzzle_flash',
+      timestamp: muzzleFlashTimestamp,
+      weaponId: event.weaponId,
+      hardpoint: hardpoint?.id,
+      data,
+    });
+
+    events.push({
+      type: 'projectile_launch',
+      timestamp: projectileLaunchTimestamp,
+      weaponId: event.weaponId,
+      hardpoint: hardpoint?.id,
+      data,
+    });
+  }
+
+  const attackDuration = getAttackWindowDuration(totalShots, config);
+  const attack: VisualAttack = {
+    attackId,
+    attackSequence,
+    round: event.round,
+    sourceRole,
+    sourceShipId: event.shipId,
+    weaponId: event.weaponId || 'unknown',
+    hardpoint: hardpoint?.id,
+    shots,
+    startTimestamp: attackStartTimestamp,
+    endTimestamp: attackStartTimestamp + attackDuration,
+  };
+
+  return { attack, events };
+}
 
 /**
  * Find hardpoint definition for a weapon
@@ -578,4 +775,146 @@ export function transformTwoShipCombatToRoleVisual(
     attacker: attackerTimelines,
     defender: defenderTimelines,
   };
+}
+
+/**
+ * Transform single-ship combat rounds into scene-level sequential timelines.
+ *
+ * This API preserves attack sequencing from combat event order and emits
+ * scene-level attack metadata while still producing VisualEvent entries.
+ */
+export function transformCombatToSequentialVisual(
+  rounds: RoundEvents[],
+  ship: Ship,
+  visualDefinitionOrHardpoints: ShipVisualDefinition | HardpointDefinition[],
+  config: SequentialAttackTimingConfig = DEFAULT_SEQUENTIAL_ATTACK_TIMING
+): VisualSceneRoundTimeline[] {
+  const hardpoints = getHardpoints(visualDefinitionOrHardpoints);
+
+  return rounds.map((round) => {
+    const attacks: VisualAttack[] = [];
+    const events: VisualEvent[] = [{
+      type: 'round_marker',
+      timestamp: 0,
+      data: { round: round.round },
+    }];
+
+    let attackStartTimestamp = config.roundLeadInMs;
+
+    for (const event of round.events) {
+      if (event.type !== 'weapon_fired' || !event.weaponId) {
+        continue;
+      }
+
+      const weapon = ship.weapons?.find((candidate) => candidate.id === event.weaponId);
+      const hardpoint = weapon ? findHardpoint(weapon, hardpoints) : undefined;
+      const { attack, events: attackEvents } = transformSequentialAttack(
+        event,
+        hardpoint,
+        attacks.length,
+        attackStartTimestamp,
+        config
+      );
+
+      attacks.push(attack);
+      events.push(...attackEvents);
+      attackStartTimestamp = attack.endTimestamp + config.attackGapMs;
+    }
+
+    events.sort((a, b) => a.timestamp - b.timestamp);
+    const lastAttackEnd = attacks.length > 0 ? attacks[attacks.length - 1].endTimestamp : config.roundLeadInMs;
+    const duration = lastAttackEnd + config.roundOutroMs;
+
+    return {
+      round: round.round,
+      attacks,
+      events,
+      weaponStates: deriveWeaponVisualStates(round, ship, visualDefinitionOrHardpoints),
+      weaponStatesByRole: {
+        attacker: deriveWeaponVisualStates(round, ship, visualDefinitionOrHardpoints),
+        defender: [],
+      },
+      duration,
+    };
+  });
+}
+
+/**
+ * Transform two-ship combat rounds into scene-level sequential timelines.
+ *
+ * Ordering source of truth:
+ * - Input round.events array order from combat-model
+ * - Only weapon_fired events participate in sequencing
+ * - round_start/round_end are ignored for attack ordering
+ */
+export function transformTwoShipCombatToSequentialVisual(
+  rounds: RoundEvents[],
+  attacker: Ship,
+  attackerVisual: ShipVisualDefinition | HardpointDefinition[],
+  defender: Ship,
+  defenderVisual: ShipVisualDefinition | HardpointDefinition[],
+  config: SequentialAttackTimingConfig = DEFAULT_SEQUENTIAL_ATTACK_TIMING
+): VisualSceneRoundTimeline[] {
+  const attackerHardpoints = getHardpoints(attackerVisual);
+  const defenderHardpoints = getHardpoints(defenderVisual);
+
+  return rounds.map((round) => {
+    const attacks: VisualAttack[] = [];
+    const events: VisualEvent[] = [{
+      type: 'round_marker',
+      timestamp: 0,
+      data: { round: round.round },
+    }];
+
+    let attackStartTimestamp = config.roundLeadInMs;
+
+    for (const event of round.events) {
+      if (event.type !== 'weapon_fired' || !event.weaponId) {
+        continue;
+      }
+
+      const sourceRole: ShipRole = event.role || 'attacker';
+      const sourceShip = sourceRole === 'defender' ? defender : attacker;
+      const sourceHardpoints = sourceRole === 'defender' ? defenderHardpoints : attackerHardpoints;
+      const weapon = sourceShip.weapons?.find((candidate) => candidate.id === event.weaponId);
+      const hardpoint = weapon ? findHardpoint(weapon, sourceHardpoints) : undefined;
+      const { attack, events: attackEvents } = transformSequentialAttack(
+        event,
+        hardpoint,
+        attacks.length,
+        attackStartTimestamp,
+        config
+      );
+
+      attacks.push(attack);
+      events.push(...attackEvents);
+      attackStartTimestamp = attack.endTimestamp + config.attackGapMs;
+    }
+
+    events.sort((a, b) => a.timestamp - b.timestamp);
+    const lastAttackEnd = attacks.length > 0 ? attacks[attacks.length - 1].endTimestamp : config.roundLeadInMs;
+    const duration = lastAttackEnd + config.roundOutroMs;
+
+    const attackerRound: RoundEvents = {
+      round: round.round,
+      events: round.events.filter((event) => event.role === 'attacker'),
+    };
+
+    const defenderRound: RoundEvents = {
+      round: round.round,
+      events: round.events.filter((event) => event.role === 'defender'),
+    };
+
+    return {
+      round: round.round,
+      attacks,
+      events,
+      weaponStates: [],
+      weaponStatesByRole: {
+        attacker: deriveWeaponVisualStates(attackerRound, attacker, attackerVisual),
+        defender: deriveWeaponVisualStates(defenderRound, defender, defenderVisual),
+      },
+      duration,
+    };
+  });
 }

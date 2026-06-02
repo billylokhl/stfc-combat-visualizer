@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { generateTwoShipCombat } from '@stfc-vi/combat-model';
 import {
-  DEFAULT_TIMING,
-  transformTwoShipCombatToRoleVisual,
-  type TwoShipVisualTimelines,
+  DEFAULT_SEQUENTIAL_ATTACK_TIMING,
+  transformTwoShipCombatToSequentialVisual,
+  type VisualSceneRoundTimeline,
   type VisualRoundTimeline,
 } from '@stfc-vi/visualization-model';
 import { listShips, getShipById, type ShipCatalogEntry } from '@stfc-vi/visualization-model/examples';
@@ -18,43 +18,47 @@ const DEFAULT_ATTACKER_ID = 'augur';
 const DEFAULT_DEFENDER_ID = 'vengeance';
 const TOTAL_ROUNDS = 15;
 
-const EMPTY_TWO_SHIP_TIMELINES: TwoShipVisualTimelines = {
-  attacker: [],
-  defender: [],
-};
+const EMPTY_SCENE_TIMELINES: VisualSceneRoundTimeline[] = [];
 
 function buildTwoShipTimelines(
   attackerEntry: ShipCatalogEntry,
   defenderEntry: ShipCatalogEntry
-): TwoShipVisualTimelines {
+): VisualSceneRoundTimeline[] {
   const attacker = attackerEntry.ship;
   const defender = defenderEntry.ship;
   const attackerVisual = attackerEntry.visual;
   const defenderVisual = defenderEntry.visual;
 
   if (!attacker || !defender || !attackerVisual || !defenderVisual) {
-    return EMPTY_TWO_SHIP_TIMELINES;
+    return EMPTY_SCENE_TIMELINES;
   }
 
   const rounds = generateTwoShipCombat(attacker, defender, TOTAL_ROUNDS);
-  return transformTwoShipCombatToRoleVisual(
+  return transformTwoShipCombatToSequentialVisual(
     rounds,
     attacker,
     attackerVisual,
     defender,
     defenderVisual,
-    DEFAULT_TIMING
+    DEFAULT_SEQUENTIAL_ATTACK_TIMING
   );
 }
 
-function getTotalRounds(timelines: TwoShipVisualTimelines): number {
-  return Math.max(timelines.attacker.length, timelines.defender.length);
+function getTotalRounds(timelines: VisualSceneRoundTimeline[]): number {
+  return timelines.length;
 }
 
 function buildAttackerDebugTimelines(
-  timelines: TwoShipVisualTimelines
+  timelines: VisualSceneRoundTimeline[]
 ): VisualRoundTimeline[] {
-  return timelines.attacker;
+  return timelines.map((timeline) => ({
+    round: timeline.round,
+    events: timeline.events.filter(
+      (event) => event.data?.sourceRole === 'attacker' || !event.data?.sourceRole
+    ),
+    weaponStates: timeline.weaponStatesByRole.attacker,
+    duration: timeline.duration,
+  }));
 }
 
 export default function App() {
@@ -62,7 +66,7 @@ export default function App() {
   const [defenderId, setDefenderId] = useState(DEFAULT_DEFENDER_ID);
   const [attackerEntry, setAttackerEntry] = useState<ShipCatalogEntry>(() => getShipById(DEFAULT_ATTACKER_ID)!);
   const [defenderEntry, setDefenderEntry] = useState<ShipCatalogEntry>(() => getShipById(DEFAULT_DEFENDER_ID)!);
-  const [timelines, setTimelines] = useState<TwoShipVisualTimelines>(() =>
+  const [timelines, setTimelines] = useState<VisualSceneRoundTimeline[]>(() =>
     buildTwoShipTimelines(getShipById(DEFAULT_ATTACKER_ID)!, getShipById(DEFAULT_DEFENDER_ID)!)
   );
   const [isPlaying, setIsPlaying] = useState(false);

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import type {
   ShipVisualDefinition,
-  TwoShipVisualTimelines,
+  VisualSceneRoundTimeline,
   VisualEvent,
   VisualRoundTimeline,
   WeaponVisualState,
@@ -10,7 +10,7 @@ import { PlaybackEngine } from '../engine/PlaybackEngine';
 import { CombatSceneRenderer } from '../renderer/CombatSceneRenderer';
 
 interface CombatCanvasProps {
-  timelines: TwoShipVisualTimelines;
+  timelines: VisualSceneRoundTimeline[];
   attackerVisualDefinition: ShipVisualDefinition;
   defenderVisualDefinition: ShipVisualDefinition;
   isPlaying: boolean;
@@ -23,35 +23,15 @@ interface CombatCanvasProps {
 
 const ACTIVE_DURATION = 100;
 
-function buildSceneClockTimelines(timelines: TwoShipVisualTimelines): VisualRoundTimeline[] {
-  const roundCount = Math.max(timelines.attacker.length, timelines.defender.length);
-  const sceneTimelines: VisualRoundTimeline[] = [];
-
-  for (let index = 0; index < roundCount; index++) {
-    const attackerRound = timelines.attacker[index];
-    const defenderRound = timelines.defender[index];
-    const round = attackerRound?.round ?? defenderRound?.round ?? index + 1;
-
-    sceneTimelines.push({
-      round,
-      events: [],
-      weaponStates: [],
-      duration: Math.max(attackerRound?.duration ?? 0, defenderRound?.duration ?? 0),
-    });
-  }
-
-  return sceneTimelines;
-}
-
 function findRoundTimeline(
-  timelines: VisualRoundTimeline[],
+  timelines: VisualSceneRoundTimeline[],
   round: number
-): VisualRoundTimeline | undefined {
+): VisualSceneRoundTimeline | undefined {
   return timelines.find((timeline) => timeline.round === round);
 }
 
-function getActiveEvents(
-  timeline: VisualRoundTimeline | undefined,
+function getActiveSceneEvents(
+  timeline: VisualSceneRoundTimeline | undefined,
   roundTime: number
 ): VisualEvent[] {
   if (!timeline) return [];
@@ -61,10 +41,33 @@ function getActiveEvents(
   );
 }
 
-function getWeaponStates(
-  timeline: VisualRoundTimeline | undefined
+function splitEventsByRole(events: VisualEvent[]): {
+  attacker: VisualEvent[];
+  defender: VisualEvent[];
+} {
+  const attacker: VisualEvent[] = [];
+  const defender: VisualEvent[] = [];
+
+  for (const event of events) {
+    if (event.data?.sourceRole === 'defender') {
+      defender.push(event);
+    } else {
+      attacker.push(event);
+    }
+  }
+
+  return { attacker, defender };
+}
+
+function getRoleWeaponStates(
+  timeline: VisualSceneRoundTimeline | undefined,
+  role: 'attacker' | 'defender'
 ): WeaponVisualState[] {
-  return timeline?.weaponStates ?? [];
+  if (!timeline) {
+    return [];
+  }
+
+  return timeline.weaponStatesByRole[role] || [];
 }
 
 export default function CombatCanvas({
@@ -82,8 +85,13 @@ export default function CombatCanvas({
   const engineRef = useRef<PlaybackEngine | null>(null);
   const rendererRef = useRef<CombatSceneRenderer | null>(null);
   const animationFrameRef = useRef<number>();
-  const sceneClockTimelines = useMemo(
-    () => buildSceneClockTimelines(timelines),
+  const sceneClockTimelines = useMemo<VisualRoundTimeline[]>(
+    () => timelines.map((timeline) => ({
+      round: timeline.round,
+      events: timeline.events,
+      weaponStates: timeline.weaponStates,
+      duration: timeline.duration,
+    })),
     [timelines]
   );
 
@@ -171,8 +179,9 @@ export default function CombatCanvas({
 
     const animate = () => {
       const state = engine.getCurrentState();
-      const attackerRound = findRoundTimeline(timelines.attacker, state.round);
-      const defenderRound = findRoundTimeline(timelines.defender, state.round);
+      const sceneRound = findRoundTimeline(timelines, state.round);
+      const activeSceneEvents = getActiveSceneEvents(sceneRound, state.roundTime);
+      const activeByRole = splitEventsByRole(activeSceneEvents);
 
       onTimeUpdate(state.roundTime);
       onRoundUpdate(state.round);
@@ -181,12 +190,12 @@ export default function CombatCanvas({
         round: state.round,
         roundTime: state.roundTime,
         attacker: {
-          activeEvents: getActiveEvents(attackerRound, state.roundTime),
-          weaponStates: getWeaponStates(attackerRound),
+          activeEvents: activeByRole.attacker,
+          weaponStates: getRoleWeaponStates(sceneRound, 'attacker'),
         },
         defender: {
-          activeEvents: getActiveEvents(defenderRound, state.roundTime),
-          weaponStates: getWeaponStates(defenderRound),
+          activeEvents: activeByRole.defender,
+          weaponStates: getRoleWeaponStates(sceneRound, 'defender'),
         },
       });
 
