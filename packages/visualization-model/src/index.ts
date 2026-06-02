@@ -131,12 +131,12 @@ export interface SequentialAttackTimingConfig {
  */
 export const DEFAULT_SEQUENTIAL_ATTACK_TIMING: SequentialAttackTimingConfig = {
   roundLeadInMs: 150,
-  attackGapMs: 240,
-  shotIntervalMs: 150,
+  attackGapMs: 480,
+  shotIntervalMs: 300,
   recoilDelayMs: 0,
   muzzleFlashDelayMs: 50,
   projectileLaunchDelayMs: 100,
-  attackTailMs: 200,
+  attackTailMs: 400,
   roundOutroMs: 250,
 };
 
