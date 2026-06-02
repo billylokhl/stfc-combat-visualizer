@@ -22,6 +22,8 @@ interface SceneProjectile {
   target: Point;
   startTime: number;
   duration: number;
+  shotIndex: number;
+  totalShots: number;
 }
 
 interface ImpactEffect {
@@ -442,6 +444,7 @@ export class CombatSceneRenderer {
 
       // Deterministic ID prevents duplicate creation across animation frames
       const shotIndex = event.data?.shotIndex ?? 0;
+      const totalShots = event.data?.totalShots ?? 1;
       const id = `${role}-r${this.lastRenderedRound}-t${event.timestamp}-w${event.weaponId ?? ''}-hp${event.hardpoint}-s${shotIndex}`;
 
       if (this.launchedProjectileIds.has(id)) {
@@ -475,6 +478,8 @@ export class CombatSceneRenderer {
         target,
         startTime: event.timestamp,
         duration,
+        shotIndex,
+        totalShots,
       });
     }
   }
@@ -507,16 +512,18 @@ export class CombatSceneRenderer {
       const x = projectile.origin.x + (projectile.target.x - projectile.origin.x) * progress;
       const y = projectile.origin.y + (projectile.target.y - projectile.origin.y) * progress;
 
-      // Short trail: 5% of total path behind current position
-      const TRAIL_FRAC = 0.05;
-      const trailProgress = Math.max(0, progress - TRAIL_FRAC);
-      const trailX = projectile.origin.x + (projectile.target.x - projectile.origin.x) * trailProgress;
-      const trailY = projectile.origin.y + (projectile.target.y - projectile.origin.y) * trailProgress;
+      const totalShots = Math.max(1, projectile.totalShots || 1);
+      const segmentFrac = totalShots > 1
+        ? Math.max(0.015, 0.06 / totalShots)
+        : 0.05;
+      const segmentStart = Math.max(0, progress - segmentFrac);
+      const segmentX = projectile.origin.x + (projectile.target.x - projectile.origin.x) * segmentStart;
+      const segmentY = projectile.origin.y + (projectile.target.y - projectile.origin.y) * segmentStart;
 
       this.ctx.strokeStyle = `rgba(255, 220, 100, ${opacity * 0.5})`;
       this.ctx.lineWidth = 2;
       this.ctx.beginPath();
-      this.ctx.moveTo(trailX, trailY);
+      this.ctx.moveTo(segmentX, segmentY);
       this.ctx.lineTo(x, y);
       this.ctx.stroke();
 
