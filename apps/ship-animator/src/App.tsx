@@ -188,6 +188,7 @@ export default function App() {
                 resetKey={resetKey}
                 onTimeUpdate={setCurrentTime}
                 onRoundUpdate={setCurrentRound}
+                onPlaybackComplete={() => setIsPlaying(false)}
                 debugOverlay={debugOverlay}
               />
             ) : (

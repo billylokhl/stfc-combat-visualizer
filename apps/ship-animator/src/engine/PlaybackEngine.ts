@@ -209,8 +209,23 @@ export class PlaybackEngine {
     if (this.timelines.length === 0) return true;
 
     const elapsed = this.getElapsedTime();
-    const totalDuration = this.timelines.reduce((sum, t) => sum + t.duration, 0);
+    const totalDuration = this.getTotalDuration();
 
     return elapsed >= totalDuration;
+  }
+
+  /**
+   * Clamp playback to the final frame and pause.
+   */
+  stopAtEnd(): void {
+    if (this.timelines.length === 0) return;
+
+    const totalDuration = this.getTotalDuration();
+    this.isPaused = true;
+    this.pausedTime = totalDuration / this.playbackSpeed;
+  }
+
+  private getTotalDuration(): number {
+    return this.timelines.reduce((sum, t) => sum + t.duration, 0);
   }
 }

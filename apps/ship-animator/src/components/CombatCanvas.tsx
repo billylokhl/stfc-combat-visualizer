@@ -18,6 +18,7 @@ interface CombatCanvasProps {
   resetKey: number;
   onTimeUpdate: (time: number) => void;
   onRoundUpdate: (round: number) => void;
+  onPlaybackComplete?: () => void;
   debugOverlay?: boolean;
 }
 
@@ -79,12 +80,14 @@ export default function CombatCanvas({
   resetKey,
   onTimeUpdate,
   onRoundUpdate,
+  onPlaybackComplete,
   debugOverlay = false,
 }: CombatCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<PlaybackEngine | null>(null);
   const rendererRef = useRef<CombatSceneRenderer | null>(null);
   const animationFrameRef = useRef<number>();
+  const completionNotifiedRef = useRef(false);
   const sceneClockTimelines = useMemo<VisualRoundTimeline[]>(
     () => timelines.map((timeline) => ({
       round: timeline.round,
@@ -111,6 +114,7 @@ export default function CombatCanvas({
       attackerVisualDefinition,
       defenderVisualDefinition
     );
+    completionNotifiedRef.current = false;
 
     const handleResize = () => {
       if (!canvas || !parent || !rendererRef.current) return;
@@ -130,6 +134,7 @@ export default function CombatCanvas({
     if (!engineRef.current) return;
     engineRef.current.restart();
     rendererRef.current?.clearProjectileState();
+    completionNotifiedRef.current = false;
   }, [resetKey]);
 
   useEffect(() => {
@@ -178,7 +183,20 @@ export default function CombatCanvas({
     const renderer = rendererRef.current;
 
     const animate = () => {
-      const state = engine.getCurrentState();
+      let state = engine.getCurrentState();
+
+      if (engine.isComplete()) {
+        engine.stopAtEnd();
+
+        if (!completionNotifiedRef.current) {
+          completionNotifiedRef.current = true;
+          if (isPlaying) {
+            onPlaybackComplete?.();
+          }
+        }
+
+        state = engine.getCurrentState();
+      }
       const sceneRound = findRoundTimeline(timelines, state.round);
       const activeSceneEvents = getActiveSceneEvents(sceneRound, state.roundTime);
       const activeByRole = splitEventsByRole(activeSceneEvents);
