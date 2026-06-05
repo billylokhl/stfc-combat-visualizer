@@ -20,6 +20,13 @@ interface CombatCanvasProps {
   onRoundUpdate: (round: number) => void;
   onPlaybackComplete?: () => void;
   debugOverlay?: boolean;
+  calibrationMode?: boolean;
+  onCalibrationChange?: (overrides: Record<string, { nx: number; ny: number }>) => void;
+  onCalibrationClick?: (info: {
+    role: 'attacker' | 'defender';
+    nx: number;
+    ny: number;
+  }) => void;
 }
 
 const ACTIVE_DURATION = 100;
@@ -82,6 +89,9 @@ export default function CombatCanvas({
   onRoundUpdate,
   onPlaybackComplete,
   debugOverlay = false,
+  calibrationMode = false,
+  onCalibrationChange,
+  onCalibrationClick,
 }: CombatCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<PlaybackEngine | null>(null);
@@ -167,6 +177,11 @@ export default function CombatCanvas({
     rendererRef.current?.setDebugOverlayEnabled(debugOverlay);
   }, [debugOverlay]);
 
+  // Sync calibration overlay state with the renderer
+  useEffect(() => {
+    rendererRef.current?.setCalibrationEnabled(calibrationMode);
+  }, [calibrationMode]);
+
   // Click-to-log normalized coordinates when the debug overlay is active
   useEffect(() => {
     if (!debugOverlay || !canvasRef.current) return;
@@ -185,6 +200,70 @@ export default function CombatCanvas({
     canvas.addEventListener('click', handleClick);
     return () => canvas.removeEventListener('click', handleClick);
   }, [debugOverlay]);
+
+  // Calibration interactions: drag hardpoints + click to read coords
+  useEffect(() => {
+    if (!calibrationMode || !canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    let isDragging = false;
+
+    const getCanvasPoint = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      return {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY,
+      };
+    };
+
+    const handleMouseDown = (e: MouseEvent) => {
+      if (!rendererRef.current) return;
+      const { x, y } = getCanvasPoint(e);
+      isDragging = rendererRef.current.beginCalibrationDrag(x, y);
+      if (isDragging) {
+        onCalibrationChange?.(rendererRef.current.getCalibrationOverrides());
+        e.preventDefault();
+      }
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!rendererRef.current || !isDragging) return;
+      const { x, y } = getCanvasPoint(e);
+      if (rendererRef.current.updateCalibrationDrag(x, y)) {
+        onCalibrationChange?.(rendererRef.current.getCalibrationOverrides());
+      }
+    };
+
+    const handleMouseUp = () => {
+      if (!rendererRef.current || !isDragging) return;
+      isDragging = false;
+      rendererRef.current.endCalibrationDrag();
+      onCalibrationChange?.(rendererRef.current.getCalibrationOverrides());
+    };
+
+    const handleClick = (e: MouseEvent) => {
+      if (!rendererRef.current || isDragging) return;
+      const { x, y } = getCanvasPoint(e);
+      const info = rendererRef.current.handleCalibrationClick(x, y);
+      if (info) {
+        onCalibrationClick?.({ role: info.role, nx: info.nx, ny: info.ny });
+      }
+    };
+
+    canvas.addEventListener('mousedown', handleMouseDown);
+    canvas.addEventListener('click', handleClick);
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      canvas.removeEventListener('mousedown', handleMouseDown);
+      canvas.removeEventListener('click', handleClick);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [calibrationMode, onCalibrationChange, onCalibrationClick]);
 
   useEffect(() => {
     if (!engineRef.current || !rendererRef.current) return;

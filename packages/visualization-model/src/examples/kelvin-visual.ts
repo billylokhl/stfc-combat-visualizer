@@ -18,7 +18,7 @@ export const kelvinVisualDefinition: ShipVisualDefinition = {
       label: 'P',
       position: 'left',
       location: { x: -40, y: 0 },
-      spriteCoords: { nx: 0.22, ny: 0.18 },
+      spriteCoords: { nx: 0.5, ny: 0.46 },
       weaponType: 'beam',
     },
     {
@@ -28,7 +28,7 @@ export const kelvinVisualDefinition: ShipVisualDefinition = {
       label: 'PT1',
       position: 'left',
       location: { x: -20, y: 25 },
-      spriteCoords: { nx: 0.13, ny: 0.54 },
+      spriteCoords: { nx: 0.63, ny: 0.56 },
       weaponType: 'torpedo',
     },
     {
@@ -38,7 +38,7 @@ export const kelvinVisualDefinition: ShipVisualDefinition = {
       label: 'PT2',
       position: 'right',
       location: { x: 20, y: 25 },
-      spriteCoords: { nx: 0.83, ny: 0.50 },
+      spriteCoords: { nx: 0.37, ny: 0.56 },
       weaponType: 'torpedo',
     },
   ],

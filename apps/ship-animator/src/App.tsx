@@ -75,6 +75,12 @@ export default function App() {
   const [currentRound, setCurrentRound] = useState(1);
   const [resetKey, setResetKey] = useState(0);
   const [debugOverlay, setDebugOverlay] = useState(false);
+  const [calibrationMode, setCalibrationMode] = useState(false);
+  const [calibrationOverrides, setCalibrationOverrides] = useState<Record<string, { nx: number; ny: number }>>({});
+  const [lastCalibrationClick, setLastCalibrationClick] = useState<
+    { role: 'attacker' | 'defender'; nx: number; ny: number } | null
+  >(null);
+  const [copyOutput, setCopyOutput] = useState('');
 
   useEffect(() => {
     const nextAttacker = getShipById(attackerId);
@@ -114,6 +120,39 @@ export default function App() {
   const canRenderScene = attackerHasVisualization && defenderHasVisualization;
   const totalRounds = getTotalRounds(timelines);
 
+  const buildCalibrationOutput = (): string => {
+    const output: string[] = [];
+
+    const appendHardpoints = (entry: ShipCatalogEntry | null) => {
+      if (!entry?.visual) return;
+
+      for (const hp of entry.visual.hardpoints) {
+        const override = calibrationOverrides[hp.id];
+        const base = hp.spriteCoords ?? {
+          nx: 0.5 + hp.location.x / entry.visual.hull.width,
+          ny: 0.5 + hp.location.y / entry.visual.hull.height,
+        };
+        const coords = override ?? base;
+        output.push(`${hp.id}`);
+        output.push(`{ nx: ${coords.nx.toFixed(2)}, ny: ${coords.ny.toFixed(2)} }`);
+        output.push('');
+      }
+    };
+
+    appendHardpoints(attackerEntry);
+    appendHardpoints(defenderEntry);
+
+    return output.join('\n').trim();
+  };
+
+  const handleCopyCoordinates = async () => {
+    const output = buildCalibrationOutput();
+    setCopyOutput(output);
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(output);
+    }
+  };
+
   return (
     <div style={{
       display: 'flex',
@@ -133,23 +172,63 @@ export default function App() {
         <h1 style={{ fontSize: '18px', fontWeight: 'normal', margin: 0 }}>
           Ship Animator — Engineering Prototype
         </h1>
-        <button
-          onClick={() => setDebugOverlay((prev) => !prev)}
-          style={{
-            marginLeft: 'auto',
-            padding: '4px 10px',
-            fontSize: '11px',
-            fontFamily: 'monospace',
-            background: debugOverlay ? '#3a3a00' : '#1a1a1a',
-            color: debugOverlay ? '#ffff00' : '#888',
-            border: debugOverlay ? '1px solid #ffff00' : '1px solid #444',
-            borderRadius: '3px',
-            cursor: 'pointer',
-          }}
-          title="Toggle hardpoint debug overlay (D)"
-        >
-          DEBUG OVERLAY [{debugOverlay ? 'ON' : 'OFF'}] (D)
-        </button>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
+          {calibrationMode && lastCalibrationClick && (
+            <div style={{ fontSize: '11px', color: '#ddd', fontFamily: 'monospace' }}>
+              {lastCalibrationClick.role.toUpperCase()} click: (
+              {lastCalibrationClick.nx.toFixed(3)}, {lastCalibrationClick.ny.toFixed(3)})
+            </div>
+          )}
+          <button
+            onClick={() => setDebugOverlay((prev) => !prev)}
+            style={{
+              padding: '4px 10px',
+              fontSize: '11px',
+              fontFamily: 'monospace',
+              background: debugOverlay ? '#3a3a00' : '#1a1a1a',
+              color: debugOverlay ? '#ffff00' : '#888',
+              border: debugOverlay ? '1px solid #ffff00' : '1px solid #444',
+              borderRadius: '3px',
+              cursor: 'pointer',
+            }}
+            title="Toggle hardpoint debug overlay (D)"
+          >
+            DEBUG OVERLAY [{debugOverlay ? 'ON' : 'OFF'}] (D)
+          </button>
+          <button
+            onClick={() => setCalibrationMode((prev) => !prev)}
+            style={{
+              padding: '4px 10px',
+              fontSize: '11px',
+              fontFamily: 'monospace',
+              background: calibrationMode ? '#083a2a' : '#1a1a1a',
+              color: calibrationMode ? '#7efcc0' : '#888',
+              border: calibrationMode ? '1px solid #7efcc0' : '1px solid #444',
+              borderRadius: '3px',
+              cursor: 'pointer',
+            }}
+            title="Toggle calibration mode"
+          >
+            CALIBRATION MODE [{calibrationMode ? 'ON' : 'OFF'}]
+          </button>
+          <button
+            onClick={handleCopyCoordinates}
+            style={{
+              padding: '4px 10px',
+              fontSize: '11px',
+              fontFamily: 'monospace',
+              background: calibrationMode ? '#1a1a1a' : '#111',
+              color: calibrationMode ? '#ddd' : '#555',
+              border: '1px solid #444',
+              borderRadius: '3px',
+              cursor: calibrationMode ? 'pointer' : 'not-allowed',
+            }}
+            disabled={!calibrationMode}
+            title="Copy current hardpoint coordinates"
+          >
+            COPY COORDINATES
+          </button>
+        </div>
       </div>
 
       <ShipMetadataPanel entry={attackerEntry} defender={defenderEntry} />
@@ -190,6 +269,9 @@ export default function App() {
                 onRoundUpdate={setCurrentRound}
                 onPlaybackComplete={() => setIsPlaying(false)}
                 debugOverlay={debugOverlay}
+                calibrationMode={calibrationMode}
+                onCalibrationChange={setCalibrationOverrides}
+                onCalibrationClick={setLastCalibrationClick}
               />
             ) : (
               <div style={{ display: 'flex', height: '100%' }}>
@@ -216,6 +298,19 @@ export default function App() {
             onRestart={handleRestart}
             onSpeedChange={setPlaybackSpeed}
           />
+          {calibrationMode && copyOutput && (
+            <div style={{
+              padding: '10px 12px',
+              borderTop: '1px solid #222',
+              background: '#111',
+              fontFamily: 'monospace',
+              fontSize: '11px',
+              color: '#d8f9ff',
+              whiteSpace: 'pre-wrap',
+            }}>
+              {copyOutput}
+            </div>
+          )}
         </div>
 
         <TimelineDebug

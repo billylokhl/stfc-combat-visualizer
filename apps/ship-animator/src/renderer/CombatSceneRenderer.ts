@@ -39,6 +39,27 @@ interface RenderedHardpoint {
   y: number;
 }
 
+interface SpriteMetrics {
+  drawWidth: number;
+  drawHeight: number;
+  left: number;
+  top: number;
+  anchor: Point;
+}
+
+interface CalibrationDragState {
+  role: ShipRole;
+  hardpointId: string;
+}
+
+interface CalibrationClickInfo {
+  role: ShipRole;
+  nx: number;
+  ny: number;
+  canvasX: number;
+  canvasY: number;
+}
+
 export interface RoleRenderState {
   activeEvents: VisualEvent[];
   weaponStates: WeaponVisualState[];
@@ -72,6 +93,12 @@ export class CombatSceneRenderer {
 
   // Debug overlay state
   private debugOverlayEnabled: boolean = false;
+
+  // Calibration overlay state
+  private calibrationEnabled: boolean = false;
+  private calibrationOverrides: Map<string, { nx: number; ny: number }> = new Map();
+  private calibrationDrag: CalibrationDragState | null = null;
+  private lastCalibrationClick: CalibrationClickInfo | null = null;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -110,6 +137,20 @@ export class CombatSceneRenderer {
     this.debugOverlayEnabled = enabled;
   }
 
+  /** Enable or disable the calibration overlay (temporary dev tool). */
+  setCalibrationEnabled(enabled: boolean): void {
+    this.calibrationEnabled = enabled;
+    if (!enabled) {
+      this.calibrationDrag = null;
+      this.lastCalibrationClick = null;
+    }
+  }
+
+  /** Return current calibration overrides keyed by hardpoint id. */
+  getCalibrationOverrides(): Record<string, { nx: number; ny: number }> {
+    return Object.fromEntries(this.calibrationOverrides.entries());
+  }
+
   /** Clear all projectile and impact effect state. Called on round change, restart, and recreation. */
   clearProjectileState(): void {
     this.activeProjectiles = [];
@@ -145,6 +186,9 @@ export class CombatSceneRenderer {
     if (this.debugOverlayEnabled) {
       this.renderDebugOverlay();
     }
+    if (this.calibrationEnabled) {
+      this.renderCalibrationOverlay();
+    }
   }
 
   private clear(): void {
@@ -168,40 +212,25 @@ export class CombatSceneRenderer {
     role: ShipRole,
     visualDefinition: ShipVisualDefinition
   ): RenderedHardpoint[] {
-    const anchor = this.getRoleAnchor(role);
+    const metrics = this.getSpriteMetrics(role, visualDefinition);
+    const { anchor, drawWidth, drawHeight } = metrics;
     const scale = this.getRoleScale(role);
-    const hull = visualDefinition.hull;
-    const hullWidth = hull.width * scale;
-    const hullHeight = hull.height * scale;
-
-    // Compute sprite draw dimensions to map spriteCoords to screen pixels.
-    // Mirrors the contain-fit logic in renderShip.
-    let imgDrawWidth = hullWidth;
-    let imgDrawHeight = hullHeight;
-    if (visualDefinition.imagePath) {
-      const img = this.shipImages.get(visualDefinition.imagePath);
-      if (img?.complete && img.naturalWidth > 0) {
-        const aspect = img.naturalWidth / img.naturalHeight;
-        if (aspect >= 1) {
-          imgDrawWidth = hullWidth;
-          imgDrawHeight = hullWidth / aspect;
-        } else {
-          imgDrawHeight = hullHeight;
-          imgDrawWidth = hullHeight * aspect;
-        }
-      }
-    }
 
     return visualDefinition.hardpoints.map((hardpoint) => {
-      if (hardpoint.spriteCoords) {
-        const { nx, ny } = hardpoint.spriteCoords;
+      const hasSpriteCoords =
+        !!hardpoint.spriteCoords ||
+        (this.calibrationEnabled && this.calibrationOverrides.has(hardpoint.id));
+
+      if (hasSpriteCoords) {
+        const coords = this.resolveSpriteCoords(visualDefinition, hardpoint);
+        const { nx, ny } = coords;
         // Defender sprite is mirrored horizontally so ships face each other.
         // Flip nx so spriteCoords always reference the un-mirrored sprite.
         const effectiveNx = role === 'defender' ? 1 - nx : nx;
         return {
           definition: hardpoint,
-          x: anchor.x - imgDrawWidth / 2 + effectiveNx * imgDrawWidth,
-          y: anchor.y - imgDrawHeight / 2 + ny * imgDrawHeight,
+          x: anchor.x - drawWidth / 2 + effectiveNx * drawWidth,
+          y: anchor.y - drawHeight / 2 + ny * drawHeight,
         };
       }
       return {
@@ -210,6 +239,60 @@ export class CombatSceneRenderer {
         y: anchor.y + hardpoint.location.y * scale,
       };
     });
+  }
+
+  private getSpriteMetrics(
+    role: ShipRole,
+    visualDefinition: ShipVisualDefinition
+  ): SpriteMetrics {
+    const anchor = this.getRoleAnchor(role);
+    const scale = this.getRoleScale(role);
+    const hull = visualDefinition.hull;
+    const hullWidth = hull.width * scale;
+    const hullHeight = hull.height * scale;
+
+    let drawWidth = hullWidth;
+    let drawHeight = hullHeight;
+    if (visualDefinition.imagePath) {
+      const img = this.shipImages.get(visualDefinition.imagePath);
+      if (img?.complete && img.naturalWidth > 0) {
+        const aspect = img.naturalWidth / img.naturalHeight;
+        if (aspect >= 1) {
+          drawWidth = hullWidth;
+          drawHeight = hullWidth / aspect;
+        } else {
+          drawHeight = hullHeight;
+          drawWidth = hullHeight * aspect;
+        }
+      }
+    }
+
+    return {
+      drawWidth,
+      drawHeight,
+      left: anchor.x - drawWidth / 2,
+      top: anchor.y - drawHeight / 2,
+      anchor,
+    };
+  }
+
+  private resolveSpriteCoords(
+    visualDefinition: ShipVisualDefinition,
+    hardpoint: HardpointDefinition
+  ): { nx: number; ny: number } {
+    if (this.calibrationEnabled) {
+      const override = this.calibrationOverrides.get(hardpoint.id);
+      if (override) {
+        return override;
+      }
+    }
+    if (hardpoint.spriteCoords) {
+      return hardpoint.spriteCoords;
+    }
+
+    const nx = 0.5 + hardpoint.location.x / visualDefinition.hull.width;
+    const ny = 0.5 + hardpoint.location.y / visualDefinition.hull.height;
+    return { nx, ny };
   }
 
   private findHardpoint(
@@ -605,13 +688,8 @@ export class CombatSceneRenderer {
 
       // Compute display coords — prefer calibrated spriteCoords, fall back to derived
       let coordStr: string;
-      if (def.spriteCoords) {
-        coordStr = `(${def.spriteCoords.nx.toFixed(2)}, ${def.spriteCoords.ny.toFixed(2)})`;
-      } else {
-        const nx = 0.5 + def.location.x / visualDefinition.hull.width;
-        const ny = 0.5 + def.location.y / visualDefinition.hull.height;
-        coordStr = `(${nx.toFixed(2)}, ${ny.toFixed(2)})`;
-      }
+      const coords = this.resolveSpriteCoords(visualDefinition, def);
+      coordStr = `(${coords.nx.toFixed(2)}, ${coords.ny.toFixed(2)})`;
 
       // Draw a bright outer ring distinct from the normal hardpoint marker
       this.ctx.strokeStyle = '#ffff00';
@@ -649,6 +727,70 @@ export class CombatSceneRenderer {
       for (let i = 0; i < lines.length; i++) {
         this.ctx.fillText(lines[i], x, boxY + padding + i * lineHeight);
       }
+    }
+  }
+
+  // ─── Calibration Overlay ────────────────────────────────────────────────
+
+  private renderCalibrationOverlay(): void {
+    this.renderCalibrationRoleOverlay('attacker', this.attackerVisual);
+    this.renderCalibrationRoleOverlay('defender', this.defenderVisual);
+
+    if (this.lastCalibrationClick) {
+      const click = this.lastCalibrationClick;
+      const label = `${click.role.toUpperCase()} (${click.nx.toFixed(3)}, ${click.ny.toFixed(3)})`;
+      this.ctx.font = '11px monospace';
+      this.ctx.textAlign = 'left';
+      this.ctx.textBaseline = 'bottom';
+      this.ctx.fillStyle = '#ffffff';
+      this.ctx.strokeStyle = '#000000';
+      this.ctx.lineWidth = 3;
+      this.ctx.strokeText(label, click.canvasX + 8, click.canvasY - 8);
+      this.ctx.fillText(label, click.canvasX + 8, click.canvasY - 8);
+    }
+  }
+
+  private renderCalibrationRoleOverlay(
+    role: ShipRole,
+    visualDefinition: ShipVisualDefinition
+  ): void {
+    const metrics = this.getSpriteMetrics(role, visualDefinition);
+
+    this.renderCalibrationGrid(metrics);
+
+    for (const hardpoint of this.getRenderedHardpoints(role, visualDefinition)) {
+      const coords = this.resolveSpriteCoords(visualDefinition, hardpoint.definition);
+      const label = `${hardpoint.definition.label} (${coords.nx.toFixed(2)}, ${coords.ny.toFixed(2)})`;
+
+      this.ctx.fillStyle = '#fff';
+      this.ctx.font = '11px monospace';
+      this.ctx.textAlign = 'left';
+      this.ctx.textBaseline = 'middle';
+      this.ctx.fillText(label, hardpoint.x + 18, hardpoint.y);
+    }
+  }
+
+  private renderCalibrationGrid(metrics: SpriteMetrics): void {
+    const { left, top, drawWidth, drawHeight } = metrics;
+    const steps = 10;
+
+    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+    this.ctx.lineWidth = 1;
+
+    for (let i = 0; i <= steps; i += 1) {
+      const t = i / steps;
+      const x = left + drawWidth * t;
+      const y = top + drawHeight * t;
+
+      this.ctx.beginPath();
+      this.ctx.moveTo(x, top);
+      this.ctx.lineTo(x, top + drawHeight);
+      this.ctx.stroke();
+
+      this.ctx.beginPath();
+      this.ctx.moveTo(left, y);
+      this.ctx.lineTo(left + drawWidth, y);
+      this.ctx.stroke();
     }
   }
 
@@ -718,5 +860,100 @@ export class CombatSceneRenderer {
         `  nearest: ${nearest?.definition.id ?? 'none'} "${nearest?.definition.name ?? ''}" (${nearestDist.toFixed(1)}px)`
       );
     }
+  }
+
+  handleCalibrationClick(canvasX: number, canvasY: number): CalibrationClickInfo | null {
+    if (!this.calibrationEnabled) return null;
+
+    const roles: ShipRole[] = ['attacker', 'defender'];
+    for (const role of roles) {
+      const visualDef = role === 'attacker' ? this.attackerVisual : this.defenderVisual;
+      const metrics = this.getSpriteMetrics(role, visualDef);
+
+      if (
+        canvasX < metrics.left ||
+        canvasX > metrics.left + metrics.drawWidth ||
+        canvasY < metrics.top ||
+        canvasY > metrics.top + metrics.drawHeight
+      ) {
+        continue;
+      }
+
+      let nx = (canvasX - metrics.left) / metrics.drawWidth;
+      const ny = (canvasY - metrics.top) / metrics.drawHeight;
+
+      if (role === 'defender') {
+        nx = 1 - nx;
+      }
+
+      const clickInfo: CalibrationClickInfo = {
+        role,
+        nx,
+        ny,
+        canvasX,
+        canvasY,
+      };
+
+      this.lastCalibrationClick = clickInfo;
+      return clickInfo;
+    }
+
+    return null;
+  }
+
+  beginCalibrationDrag(canvasX: number, canvasY: number): boolean {
+    if (!this.calibrationEnabled) return false;
+
+    let closest: { role: ShipRole; hardpointId: string; distance: number } | null = null;
+    const roles: ShipRole[] = ['attacker', 'defender'];
+
+    for (const role of roles) {
+      const visualDef = role === 'attacker' ? this.attackerVisual : this.defenderVisual;
+      const hardpoints = this.getRenderedHardpoints(role, visualDef);
+      for (const hp of hardpoints) {
+        const dx = canvasX - hp.x;
+        const dy = canvasY - hp.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (!closest || distance < closest.distance) {
+          closest = { role, hardpointId: hp.definition.id, distance };
+        }
+      }
+    }
+
+    if (closest && closest.distance <= 24) {
+      this.calibrationDrag = {
+        role: closest.role,
+        hardpointId: closest.hardpointId,
+      };
+      this.updateCalibrationDrag(canvasX, canvasY);
+      return true;
+    }
+
+    return false;
+  }
+
+  updateCalibrationDrag(canvasX: number, canvasY: number): boolean {
+    if (!this.calibrationEnabled || !this.calibrationDrag) return false;
+
+    const { role, hardpointId } = this.calibrationDrag;
+    const visualDef = role === 'attacker' ? this.attackerVisual : this.defenderVisual;
+    const metrics = this.getSpriteMetrics(role, visualDef);
+
+    let nx = (canvasX - metrics.left) / metrics.drawWidth;
+    let ny = (canvasY - metrics.top) / metrics.drawHeight;
+
+    if (role === 'defender') {
+      nx = 1 - nx;
+    }
+
+    nx = Math.min(1, Math.max(0, nx));
+    ny = Math.min(1, Math.max(0, ny));
+
+    this.calibrationOverrides.set(hardpointId, { nx, ny });
+    return true;
+  }
+
+  endCalibrationDrag(): void {
+    this.calibrationDrag = null;
   }
 }
